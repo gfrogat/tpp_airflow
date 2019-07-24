@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+export SPARK_WORKER_INSTANCES=8
+export SPARK_WORKER_CORES=2
+export SPARK_WORKER_MEMORY=4g
+export SPARK_SSH_OPTS="-p 5792"
