@@ -1,55 +1,81 @@
 from rdkit import Chem
 from tqdm import tqdm
-
 import logging
-import os
 from pathlib import Path
+from functools import partial
+from multiprocessing import Pool, TimeoutError
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
-def export_sdf_shard(shard_filename, suppl, num_items, verbose=True):
+def export_sdf_shard(shard_meta, filename, shard_dir, width=2):
+    shard_id, item_range = shard_meta
+
+    shard_filename = shard_dir / "{}_shard{:0{}}.sdf".format(
+        filename.stem, shard_id, width
+    )
+
     logging.info("Exporting shard `{}`".format(shard_filename))
-    sdf_writer = Chem.SDWriter(str(shard_filename))
+    sdf_reader = Chem.SDMolSupplier(filename.as_posix())
+    sdf_writer = Chem.SDWriter(shard_filename.as_posix())
 
-    if verbose is True:
-        suppl = tqdm(suppl, total=num_items)
-
-    for i, mol in enumerate(suppl):
+    for idx in range(*item_range):
+        mol = sdf_reader[idx]
         if mol is not None:
             sdf_writer.write(mol)
-
-        if i == num_items - 1:
-            break
 
     sdf_writer.close()
 
 
-def shard_sdf(sdf_file, out_dir, num_shards=100, verbose=True):
-    suppl = Chem.SDMolSupplier(sdf_file)
+def shard_sdf(filename, shard_dir, num_shards=100, num_proc=6):
+    suppl = Chem.SDMolSupplier(filename.as_posix())
 
     logging.info(
-        "Getting number of items in `{}`. This can take a while.".format(sdf_file)
+        "Getting number of items in `{}`. This can take a while.".format(filename)
     )
     num_items = len(suppl)
     logging.info("{} items".format(num_items))
 
     shard_size = num_items // num_shards + 1
 
-    out_dir = Path(out_dir)
-    basename = os.path.basename(sdf_file)
-    shard_basename = os.path.splitext(basename)[0]
+    if not shard_dir.exists():
+        shard_dir.mkdir()
 
-    if not os.path.exists(out_dir):
-        os.mkdir(out_dir)
-
-    for shard_id in range(num_shards):
-        shard_filename = out_dir / "{basename}_shard{id:0{width}}.sdf".format(
-            basename=shard_basename, id=shard_id, width=2
+    shard_meta = [
+        (shard_id, (item_id, min(item_id + shard_size, num_items)))
+        for (shard_id, item_id) in zip(
+            range(num_shards), range(0, num_items, shard_size)
         )
-        export_sdf_shard(shard_filename, suppl, shard_size, verbose)
+    ]
+
+    with tqdm(total=len(shard_meta)) as progress_bar:
+        with Pool(num_proc) as pool:
+            it = pool.imap_unordered(
+                partial(
+                    export_sdf_shard,
+                    filename=filename,
+                    shard_dir=shard_dir,
+                    width=len(str(num_shards)),
+                ),
+                shard_meta,
+                chunksize=1,
+            )
+            try:
+                while True:
+                    try:
+                        it.next(timeout=300)
+                    except TimeoutError as error:
+                        logging.error(error, exc_info=True)
+
+                    progress_bar.update(1)
+            except StopIteration:
+                pass
+        logging.info("Finished SDF sharding")
 
 
 if __name__ == "__main__":
-    chembl_sdf = "/local00/bioinf/tpp/chembl_25.sdf"
-    shard_sdf(chembl_sdf, out_dir="chembl_25_shards", verbose=True)
+    _data_root = Path("/data/ChEMBL/chembl_25")
+    chembl_sdf = _data_root / "chembl_25.sdf"
+    shard_dir = _data_root / "chembl_25_shards"
+
+    shard_sdf(chembl_sdf, shard_dir, num_shards=100)
