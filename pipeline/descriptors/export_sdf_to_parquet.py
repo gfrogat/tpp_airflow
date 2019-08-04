@@ -60,20 +60,20 @@ schema = T.StructType(
     ]
 )
 
-"""
-# _data_root = Path("/local00/bioinf/tpp")
-_data_root = Path("/data/ChEMBL/")
+_data_root = Path("/local00/bioinf/tpp")
+# _data_root = Path("/data/ChEMBL/")
 sdf_path = _data_root.glob("chembl_25/chembl_25_shards/*.sdf")
 parquet_path = _data_root / "chembl_25/chembl_25_compounds.parquet"
 sdf_files = sc.parallelize(list(sdf_path))
 sdf_parquet = sdf_files.flatMap(export_molecules_chembl).toDF(schema=schema)
-"""
 
-# _data_root = Path("/data/PubChem")
+"""
+#_data_root = Path("/data/PubChem")
 _data_root = Path("/local00/bioinf/tpp/pubchem_20190717")
 _sdf_root = _data_root / "ftp.ncbi.nlm.nih.gov/pubchem/Compound/CURRENT-Full/SDF/"
 sdf_path = _sdf_root.glob("*.sdf.gz")
 parquet_path = _data_root / "pubchem_compounds_full.parquet"
+"""
 
 sdf_files = sc.parallelize(list(sdf_path))
 sdf_files = sdf_files.repartition(200)
