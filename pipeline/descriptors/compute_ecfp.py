@@ -1,17 +1,18 @@
+import numpy as np
+import pandas as pd
+from pyspark.sql import Row
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql import types as T
-from pyspark.sql import Row
-
 from rdkit import Chem
 from rdkit.Chem import AllChem
-import pandas as pd
-import numpy as np
 
 spark = (
-    SparkSession.builder.appName("Process ChEMBL25 Assays")
-    .config("spark.sql.execution.arrow.enabled", "true")
-    .getOrCreate()
+    SparkSession
+        .builder
+        .appName("Process ChEMBL25 Assays")
+        .config("spark.sql.execution.arrow.enabled", "true")
+        .getOrCreate()
 )
 
 sc = spark.sparkContext

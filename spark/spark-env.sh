@@ -43,8 +43,8 @@
 # - SPARK_EXECUTOR_MEMORY, Memory per Executor (e.g. 1000M, 2G) (Default: 1G)
 # - SPARK_DRIVER_MEMORY, Memory for Driver (e.g. 1000M, 2G) (Default: 1G)
 
-PYSPARK_DRIVER_PYTHON=${CONDA_PREFIX}/bin/ipython
-PYSPARK_PYTHON=${CONDA_PREFIX}/bin/pytho
+PYSPARK_DRIVER_PYTHON=${CONDA_PREFIX}/bin/python
+PYSPARK_PYTHON=${CONDA_PREFIX}/bin/python
 
 # Options for the daemons used in the standalone deploy mode
 # - SPARK_MASTER_HOST, to bind the master to a different IP address or hostname

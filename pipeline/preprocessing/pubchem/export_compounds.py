@@ -1,14 +1,11 @@
+import glob
 import gzip
 from pathlib import Path
 
 import pandas as pd
-
-from rdkit import Chem, rdBase
-
-import glob
-
-from pyspark.sql import SparkSession
 from pyspark.sql import Row
+from pyspark.sql import SparkSession
+from rdkit import Chem, rdBase
 
 spark = (
     SparkSession.builder.appName("Export PubChem Compounds")

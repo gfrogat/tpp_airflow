@@ -1,10 +1,10 @@
-import os
-import gzip
-import zipfile
 import csv
 import glob
-from pyspark.sql import Row
+import gzip
+import os
+import zipfile
 
+from pyspark.sql import Row
 from pyspark.sql import SparkSession
 
 spark = (

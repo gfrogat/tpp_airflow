@@ -1,11 +1,10 @@
+import numpy as np
+from pyspark.sql import Row
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql import types as T
-from pyspark.sql import Row
-
 from rdkit import Chem
 from rdkit.Chem import MACCSkeys
-import numpy as np
 
 spark = (
     SparkSession.builder.appName("Process ChEMBL25 Assays")

@@ -11,8 +11,6 @@ spark = (
     .getOrCreate()
 )
 
-spark.conf.set("spark.sql.execution.arrow.enabled", "true")
-
 _data_root = Path("/local00/bioinf/tpp")
 
 

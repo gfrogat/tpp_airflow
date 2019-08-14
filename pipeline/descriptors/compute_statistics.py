@@ -1,7 +1,5 @@
-from pyspark.sql import types as T
 from pyspark.sql import functions as F
-
-import numpy as np
+from pyspark.sql import types as T
 
 
 @F.udf(returnType=T.IntegerType())

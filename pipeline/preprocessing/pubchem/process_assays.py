@@ -1,7 +1,7 @@
 from pyspark.sql import SparkSession
-from pyspark.sql import types as T
-from pyspark.sql import functions as F
 from pyspark.sql import Window
+from pyspark.sql import functions as F
+from pyspark.sql import types as T
 
 spark = (
     SparkSession.builder.appName("Process PubChem Assays")
