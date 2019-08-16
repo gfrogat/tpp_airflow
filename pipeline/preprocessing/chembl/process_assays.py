@@ -7,23 +7,6 @@ from pyspark.sql import types as T
 
 _data_root = Path("/local00/bioinf/tpp/ChEMBL")
 
-chembl25_schema = T.StructType(
-    [
-        T.StructField("mol_id", T.StringType(), False),
-        T.StructField("assay_id", T.StringType(), False),
-        T.StructField("standard_relation", T.StringType(), True),
-        T.StructField("standard_value", T.DoubleType(), True),
-        T.StructField("standard_units", T.StringType(), True),
-        T.StructField("standard_type", T.StringType(), True),
-        T.StructField("activity_comment", T.StringType(), True),
-        T.StructField("doc_id", T.LongType(), True),
-        T.StructField("tid", T.LongType(), True),
-        T.StructField("parent_type", T.StringType(), True),
-        T.StructField("target_type", T.StringType(), True),
-        T.StructField("confidence_score", T.IntegerType(), True),
-    ]
-)
-
 active_comments = {"active", "Active"}
 inactive_comments = {
     "Not Active (inhibition < 50% @ 10 uM and thus dose-response curve not measured)",
@@ -94,29 +77,35 @@ def clean_activity_labels(activities: List[int]):
 
 
 if __name__ == "__main__":
-    spark = SparkSession \
-        .builder \
-        .appName("Process ChEMBL25 Assays") \
-        .config("spark.sql.execution.arrow.enabled", "true") \
-        .getOrCreate()
+    try:
+        spark = SparkSession \
+            .builder \
+            .appName("Process ChEMBL25 Assays") \
+            .config("spark.sql.execution.arrow.enabled", "true") \
+            .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer") \
+            .getOrCreate()
 
-    df = spark \
-        .read \
-        .parquet((_data_root / "chembl_25/chembl_25_assays_dump.parquet").as_posix()) \
-        .repartition(100)
+        df = spark \
+            .read \
+            .parquet((_data_root / "chembl_25/chembl_25_assays_dump.parquet").as_posix()) \
+            .repartition(100)
 
-    df_processed = df \
-        .withColumn("activity",
-                    generate_activity_labels(
-                        F.col("activity_comment"),
-                        F.col("standard_value"),
-                        F.col("standard_units"),
-                        F.col("standard_relation")))
+        df_processed = df \
+            .withColumn("activity",
+                        generate_activity_labels(
+                            F.col("activity_comment"),
+                            F.col("standard_value"),
+                            F.col("standard_units"),
+                            F.col("standard_relation")))
 
-    df_cleaned = df_processed \
-        .groupby(["assay_id", "mol_id"]) \
-        .agg(clean_activity_labels(F.col("activity")).alias("activity"))
+        df_cleaned = df_processed \
+            .groupby(["assay_id", "mol_id"]) \
+            .agg(clean_activity_labels(F.col("activity")).alias("activity"))
 
-    df_cleaned \
-        .write \
-        .parquet((_data_root / "chembl_25/chembl_25_activity_protocol.parquet").as_posix())
+        df_cleaned \
+            .write \
+            .parquet((_data_root / "chembl_25/chembl_25_activity_cleaned.parquet").as_posix())
+    except Exception:
+    # handle exception
+    finally:
+        spark.stop()
