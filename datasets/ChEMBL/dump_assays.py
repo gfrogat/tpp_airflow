@@ -1,37 +1,36 @@
 #!/bin/env python
 import argparse
-import pandas as pd
+import logging
 import sqlite3
-import os
 from pathlib import Path
 
-import logging
+import pandas as pd
 
-_chembl_path = Path("/publicdata/tpp/ChEMBL/chembl_25/chembl_25_sqlite")
-_db_path = _chembl_path / "chembl_25.db"
+_chembl_path = Path("/publicdata/tpp/datasets/ChEMBL/chembl_25")
+_db_path = _chembl_path / "chembl_25_sqlite/chembl_25.db"
 _parquet_path = _chembl_path / "chembl_25_assays_dump.parquet"
 
 logging.basicConfig(level=logging.INFO)
 
 
-def dump_chembl_sqlite(db_path, parquet_path):
+def dump_chembl_sqlite(db_path: Path, parquet_path: Path):
     logging.info("Connecting to database")
-    cnx = sqlite3.connect(db_path)
+    cnx = sqlite3.connect(db_path.as_posix())
 
     query = """
     SELECT
-        md.chembl_id as mol_id,
-        ass.chembl_id as assay_id,
-        act.standard_relation as standard_relation,
-        act.standard_value as standard_value,
-        act.standard_units as standard_units,
-        act.standard_type as standard_type,
-        act.activity_comment as activity_comment,
-        act.doc_id as doc_id,
-        td.tid as tid,
-        tt.parent_type as parent_type,
-        tt.target_type as target_type,
-        ass.confidence_score as confidence_score
+        md.chembl_id AS mol_id,
+        ass.chembl_id AS assay_id,
+        act.standard_relation AS standard_relation,
+        act.standard_value AS standard_value,
+        act.standard_units AS standard_units,
+        act.standard_type AS standard_type,
+        act.activity_comment AS activity_comment,
+        act.doc_id AS doc_id,
+        td.tid AS tid,
+        tt.parent_type AS parent_type,
+        tt.target_type AS target_type,
+        ass.confidence_score AS confidence_score
     FROM
         target_dictionary td
     JOIN
@@ -48,25 +47,25 @@ def dump_chembl_sqlite(db_path, parquet_path):
     df = pd.read_sql(query, cnx)
 
     logging.info("Writing results to file")
-    df.to_parquet(parquet_path)
+    df.to_parquet(parquet_path.as_posix())
 
     logging.info(
-        "Successfully exported assays `{}` to file `{}`".format(db_path, parquet_path)
+        f"Successfully exported assays `{db_path}` to file `{parquet_path}`"
     )
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="ChEMBL sqlite Exporter")
+    parser = argparse.ArgumentParser(description="ChEMBL SQLite Exporter")
     parser.add_argument(
         "--input",
-        type=str,
+        type=Path,
         dest="db_path",
         default=_db_path,
         help="Path to ChEMBL `sqlite` database file",
     )
     parser.add_argument(
         "--output",
-        type=str,
+        type=Path,
         dest="parquet_path",
         default=_parquet_path,
         help="Path where output `parquet` should be written to",
@@ -74,10 +73,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if not os.path.exists(args.db_path):
-        raise ValueError("Path {} does not exist".format(_db_path))
+    if not args.db_path.exists():
+        raise ValueError(f"Path {args.db_path} does not exist!")
 
-    if not os.path.exists(os.path.dirname(args.parquet_path)):
-        raise ValueError("Parent folder of parquet does not exist")
+    if not args.parquet_path.parent.exists():
+        raise ValueError(f"{args.parquet_path.parent} does not exist!")
 
     dump_chembl_sqlite(args.db_path, args.parquet_path)
