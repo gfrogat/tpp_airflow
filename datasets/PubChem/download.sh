@@ -1,6 +1,6 @@
 #!/bin/env bash
 
-PUBCHEM_DIR="/publicdata/tpp/PubChem"
+PUBCHEM_DIR="/publicdata/tpp/datasets/PubChem"
 PUBCHEM_BIOASSAY_URL="ftp://ftp.ncbi.nlm.nih.gov/pubchem/Bioassay/CSV/Data"
 PUBCHEM_COMPOUND_URL="ftp://ftp.ncbi.nlm.nih.gov/pubchem/Compound/CURRENT-Full/SDF"
 

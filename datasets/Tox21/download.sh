@@ -1,6 +1,6 @@
 #!/bin/env bash
 
-TOX21_DIR="/publicdata/tpp/Tox21"
+TOX21_DIR="/publicdata/tpp/datasets/Tox21"
 TOX21_ALL_URL="https://tripod.nih.gov/tox21/challenge/download?id=tox21_10k_data_allsdf"
 TOX21_TEST_URL="https://tripod.nih.gov/tox21/challenge/download?id=tox21_10k_challenge_testsdf"
 TOX21_SCORE_URL="https://tripod.nih.gov/tox21/challenge/download?id=tox21_10k_challenge_scoresdf"

@@ -1,6 +1,6 @@
 #!/bin/env bash
 
-CHEMBL_DIR="/publicdata/tpp/ChEMBL"
+CHEMBL_DIR="/publicdata/tpp/datasets/ChEMBL"
 
 # Templates for url variables
 SQLITE_URL_TEMPLATE="CHEMBL_RELEASE_SQLITE_URL"
@@ -26,7 +26,7 @@ CHEMBL_22_SDF_URL="ftp://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBLdb/releases/ch
 CHEMBL_21_SQLITE_URL="ftp://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBLdb/releases/chembl_21/chembl_21_sqlite.tar.gz"
 CHEMBL_21_SDF_URL="ftp://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBLdb/releases/chembl_21/chembl_21.sdf.gz"
 
-if [ -z ${RELEASE} ]; then
+if [[ -z ${RELEASE} ]]; then
     echo "ChEMBL release is not set";
     echo "Using default release 25";
     RELEASE=25
