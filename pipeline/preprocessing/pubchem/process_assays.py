@@ -3,11 +3,9 @@ from pyspark.sql import Window
 from pyspark.sql import functions as F
 from pyspark.sql import types as T
 
-spark = (
-    SparkSession.builder.appName("Process PubChem Assays")
-    .config("spark.sql.execution.arrow.enabled", "true")
-    .getOrCreate()
-)
+from pathlib import Path
+
+_data_root = Path("/local00/bioinf/tpp/pubchem_20190717")
 
 pubchem_assay_schema = T.StructType(
     [
@@ -17,51 +15,56 @@ pubchem_assay_schema = T.StructType(
     ]
 )
 
+if __name__ == '__main__':
+    try:
+        spark = SparkSession \
+            .builder \
+            .appName("Process PubChem Assays") \
+            .config("spark.sql.execution.arrow.enabled", "true") \
+            .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer") \
+            .getOrCreate()
 
-df = spark.read.parquet("/local00/bioinf/tpp/pubchem_20190717/pubchem.parquet")
-df = df.dropna()
+        assays = spark \
+            .read \
+            .parquet((_data_root / "pubchem_assays.parquet").as_posix()) \
+            .dropna()
 
-# remove assays with few measurements
-w = Window.partitionBy("aid")
+        # remove assays with few measurements
+        w = Window.partitionBy("aid")
 
-df = (
-    df.select(["aid", "cid", "activity_outcome"])
-    .withColumn("count", F.count("*").over(w))
-    .filter(F.col("count") > 25)
-    .drop("count")
-)
+        # Filter out assays that don't appear at least 25 times
+        assays = assays \
+            .select("aid", "cid", "activity_outcome") \
+            .withColumn("count", F.count("*").over(w)) \
+            .filter(F.col("count") > 25) \
+            .drop("count")
 
+        assays = assays \
+            .withColumn("affinity", F.when(F.col("activity_outcome") == 3, 1.0).otherwise(0.0)) \
+            .drop("activity_outcome")
 
-df = df.withColumn(
-    "affinity", F.when(F.col("activity_outcome") == 3, 1.0).otherwise(0.0)
-).drop("activity_outcome")
+        assays = assays \
+            .groupby(["aid", "cid"]) \
+            .agg(F.mean(F.col("affinity")).alias("avg_affinity")) \
+            .filter(F.col("avg_affinity") != 0.5)
 
+        assays = assays \
+            .withColumn("activity", (2 * (F.round(F.col("avg_affinity")) - 0.5)).cast(T.IntegerType())) \
+            .drop("avg_affinity")
 
-df = (
-    df.groupby(["aid", "cid"])
-    .agg(F.mean(F.col("affinity")).alias("avg_affinity"))
-    .filter(F.col("avg_affinity") != 0.5)
-)
+        processed_assays = assays \
+            .withColumn("actives", F.count(F.when(F.col("activity") == 1, 0)).over(w)) \
+            .withColumn("inactives", F.count(F.when(F.col("activity") == -1, 0)).over(w)) \
+            .filter(
+                (F.col("actives") > 10)
+                & (F.col("inactives") > 10)
+                & (F.col("actives") + F.col("inactives") > 25)) \
+            .select("cid".alias("mol_id"), "aid".alias("assay_id"), "activity")
 
-df = df.withColumn(
-    "activity", (2 * (F.round(F.col("avg_affinity")) - 0.5)).cast(T.IntegerType())
-).drop("avg_affinity")
-
-
-w = Window.partitionBy("aid")
-
-selected_df = (
-    df.withColumn("actives", F.count(F.when(F.col("activity") == 1, 0)).over(w))
-    .withColumn("inactives", F.count(F.when(F.col("activity") == -1, 0)).over(w))
-    .filter(
-        (F.col("actives") > 10)
-        & (F.col("inactives") > 10)
-        & (F.col("actives") + F.col("inactives") > 25)
-    )
-    .select(["cid", "aid", "activity"])
-)
-
-
-selected_df.write.parquet(
-    "/local00/bioinf/tpp/pubchem_20190717/pubchem_processed.parquet"
-)
+        processed_assays \
+            .write \
+            .parquet((_data_root / "pubchem_assays_processed.parquet").as_posix())
+    except Exception:
+        # handle Exception
+    finally:
+        spark.stop()
