@@ -1,8 +1,8 @@
-from pyspark.sql import SparkSession
-import pyspark.sql.types as T
-import pyspark.sql.functions as F
-
 from pathlib import Path
+
+import pyspark.sql.functions as F
+import pyspark.sql.types as T
+from pyspark.sql import SparkSession
 
 spark = (
     SparkSession.builder.appName("Process ChEMBL25 Assays")
