@@ -77,17 +77,18 @@ def export_chembl_sqlite(db_path: Path, parquet_path: Path,
     logging.info("Writing results to file")
     df.to_parquet(parquet_path.as_posix())
 
-    logging.info((f"Successfully exported {export_type} `{db_path}`"
+    logging.info((f"Successfully exported {export_type} `{db_path}` "
                   f"to file `{parquet_path}`"))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog="ChEMBL SQLite Exporter",
-        description=("Export {assays, compounds} from ChEMBL SQLite"
+        description=("Export {assays, compounds} from ChEMBL SQLite "
                      "database in `parquet` format."))
     parser.add_argument(
         "--input",
+        required=True,
         type=Path,
         metavar="PATH",
         dest="db_path",
@@ -96,9 +97,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output",
         type=Path,
+        required=True,
         metavar="PATH",
         dest="parquet_path",
-        required=True,
         help="Path where output should be written to in `parquet` format",
     )
     parser.add_argument(
