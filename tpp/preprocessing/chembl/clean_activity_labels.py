@@ -1,10 +1,6 @@
 from typing import List
 
-import pyspark.sql.functions as F
-import pyspark.sql.types as T
 
-
-@F.pandas_udf(T.IntegerType(), F.PandasUDFType.GROUPED_AGG)
 def clean_activity_labels(activities: List[int]) -> int:
     activities = set(activities)
 

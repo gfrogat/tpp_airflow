@@ -1,6 +1,3 @@
-import pyspark.sql.functions as F
-import pyspark.sql.types as T
-
 ACTIVE_COMMENTS = {"active", "Active"}
 INACTIVE_COMMENTS = {
     ("Not Active (inhibition < 50% @ 10 uM and "
@@ -14,7 +11,6 @@ INACTIVE_RELATIONS = {">", ">=", "=", "~"}
 ACTIVE_RELATIONS = {"<", "<=", "=", "~"}
 
 
-@F.udf(returnType=T.IntegerType())
 def generate_activity_labels(
         activity_comment: str, std_value: float, std_unit: str,
         std_relation: str
