@@ -7,22 +7,14 @@ from pyspark.sql import types as T
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
-spark = (
-    SparkSession
-        .builder
-        .appName("Process ChEMBL25 Assays")
-        .config("spark.sql.execution.arrow.enabled", "true")
-        .getOrCreate()
-)
 
-sc = spark.sparkContext
 
 _data_root = "/local00/bioinf/tpp"
 
 tox_smarts = pd.read_csv(_data_root + "/tox_smarts.txt", sep="|", header=None)
 tox_smarts.columns = ["smarts"]
 
-tox_smarts = [Chem.MolFromSmarts(tm) for tm in tox_smarts.smarts]
+tox_smarts = [Chem.MolFromSmarts(tm) for tm in tox_smarts]
 tox_smarts = [tm for tm in tox_smarts if tm is not None]
 
 tox_smarts_broad = sc.broadcast(tox_smarts)
@@ -69,10 +61,20 @@ def calculate_descriptors(inchi):
     return row
 
 
-df = spark.read.parquet(_data_root + "/chembl_25/chembl_25_assays_flattened.parquet")
-df = df.repartition(400)
-df = df.withColumn("descriptors", calculate_descriptors(F.col("inchi")))
+if __name__ == '__main__':
+    spark = SparkSession \
+        .builder \
+        .appName("Process ChEMBL25 Assays") \
+        .config("spark.sql.execution.arrow.enabled", "true") \
+        .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer") \
+        .getOrCreate()
 
-df_descriptors = df.select("inchikey", "inchi", "activity", "index", "descriptors.*")
-df_descriptors = df_descriptors.coalesce(10)
-df_descriptors.write.parquet(_data_root + "/descriptors/ecfp6_tox.parquet")
+    sc = spark.sparkContext
+
+    df = spark.read.parquet(_data_root + "/chembl_25/chembl_25_assays_flattened.parquet")
+    df = df.repartition(400)
+    df = df.withColumn("descriptors", calculate_descriptors(F.col("inchi")))
+
+    df_descriptors = df.select("inchikey", "inchi", "activity", "index", "descriptors.*")
+    df_descriptors = df_descriptors.coalesce(10)
+    df_descriptors.write.parquet(_data_root + "/descriptors/ecfp6_tox.parquet")

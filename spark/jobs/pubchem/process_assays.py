@@ -59,7 +59,7 @@ if __name__ == '__main__':
                 (F.col("actives") > 10)
                 & (F.col("inactives") > 10)
                 & (F.col("actives") + F.col("inactives") > 25)) \
-            .select("cid".alias("mol_id"), "aid".alias("assay_id"), "activity")
+            .select("cid", "aid", "activity")
 
         processed_assays \
             .write \
