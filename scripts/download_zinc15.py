@@ -1,3 +1,4 @@
+#!/bin/env python
 import argparse
 import logging
 import os
@@ -10,15 +11,15 @@ from tqdm import tqdm
 _zinc15_dir = Path("/publicdata/tpp/datasets/ZINC15")
 _sdf_path = _zinc15_dir / "sdf"
 
-_zinc15_url = (
+ZINC15_URL = (
     "https://zinc15.docking.org/activities.sdf"
     ":zinc_id+gene_name+organism+num_observations+affinity+smiles"
 )
-_zinc15_n_items = 638174
-_zinc15_items_per_page = 100
+ZINC15_NUM_ITEMS = 638174
+ZINC15_ITEMS_PER_PAGE = 100
 
 
-def get_page_as_sdf(page: int, sdf_path: Path, url: str = _zinc15_url):
+def get_page_as_sdf(page: int, sdf_path: Path, url: str = ZINC15_URL):
     r = requests.get(url, params={"page": page})
     if r.status_code == requests.codes.ok:
         page_path = sdf_path / f"page{page}"
@@ -30,7 +31,7 @@ def download_zinc15(sdf_path: Path):
     logging.basicConfig(level=logging.DEBUG)
 
     # compute number of pages
-    n_pages = _zinc15_n_items // _zinc15_items_per_page + 1
+    n_pages = ZINC15_NUM_ITEMS // ZINC15_ITEMS_PER_PAGE + 1
 
     # create new folder for SDF files
     if not sdf_path.exists():
@@ -41,7 +42,8 @@ def download_zinc15(sdf_path: Path):
 
     # if a file named 'failures.csv' exits, parse the failed pages
     # and retry to download them
-    if os.path.exists("failures.csv"):
+    failures_path = Path("failures.csv")
+    if failures_path.exists():
         pages = pd.read_csv("failures.csv", header=None).iloc[:, 0].to_list()
 
     for page in tqdm(pages):
@@ -53,22 +55,25 @@ def download_zinc15(sdf_path: Path):
 
     logging.info(f"Downloaded pages with {len(failed_pages)} failures")
 
-    with open("failures.csv", "w") as outfile:
+    with open(failures_path, "w") as outfile:
         for failure in failed_pages:
             outfile.write(f"{failure}\n")
 
-    logging.info("Written failed pages to `failures.csv`")
-    logging.info("Rerun the script will attempt to download pages in `failures.csv` again")
+    logging.info(f"Written failed pages to {failures_path}")
+    logging.info(("Rerunning this script will attempt to download"
+                  f"failed pages in {failures_path} again"))
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="ZINC15 SDF Downloader")
+    parser = argparse.ArgumentParser(
+        prog="ZINC15 SDF Downloader",
+        description="Download ZINC15 BioAssays in SDF format.")
     parser.add_argument(
         "--output",
         type=str,
         dest="sdf_path",
         default=_sdf_path,
-        help="Path where downloaded `sdf` should be written written to",
+        help="Path to store downloaded SDF files"
     )
 
     args = parser.parse_args()

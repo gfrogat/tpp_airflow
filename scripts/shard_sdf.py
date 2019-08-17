@@ -1,3 +1,4 @@
+#!/bin/env python
 import argparse
 import logging
 from functools import partial
@@ -10,21 +11,19 @@ from tqdm import tqdm
 
 logging.basicConfig(level=logging.INFO)
 
-_chembl_path = Path("/publicdata/tpp/datasets/ChEMBL/chembl_25")
-_sdf_path = _chembl_path / "chembl_25.sdf"
-_shards_path = _chembl_path / "chembl_25_shards"
-_num_shards = 100
-_num_proc = 6
+NUM_SHARDS = 100
+NUM_PROC = 6
 
 
-def export_sdf_shard(shard_meta: Tuple[int, Tuple[int, int]], sdf_path: Path, shards_path: Path, width: int = 2):
+def export_sdf_shard(shard_meta: Tuple[int, Tuple[int, int]], sdf_path: Path,
+                     shards_path: Path, width: int = 2):
     shard_id, item_range = shard_meta
 
-    shard_filename = shards_path / f"{_chembl_path.stem}_shard{shard_id:0{width}d}"
+    filename = shards_path / f"{sdf_path.stem}_shard{shard_id:0{width}d}"
 
-    logging.info(f"Exporting shard `{shard_filename}`")
+    logging.info(f"Exporting shard `{filename}`")
     sdf_reader = Chem.SDMolSupplier(sdf_path.as_posix())
-    sdf_writer = Chem.SDWriter(shard_filename.as_posix())
+    sdf_writer = Chem.SDWriter(filename.as_posix())
 
     for idx in range(*item_range):
         mol = sdf_reader[idx]
@@ -34,7 +33,8 @@ def export_sdf_shard(shard_meta: Tuple[int, Tuple[int, int]], sdf_path: Path, sh
     sdf_writer.close()
 
 
-def shard_sdf(sdf_path: Path, shards_path: Path, num_shards: int, num_proc: int):
+def shard_sdf(sdf_path: Path, shards_path: Path, num_shards: int,
+              num_proc: int):
     suppl = Chem.SDMolSupplier(sdf_path.as_posix())
 
     logging.info(
@@ -81,45 +81,49 @@ def shard_sdf(sdf_path: Path, shards_path: Path, num_shards: int, num_proc: int)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="ChEMBL SDF Sharder")
+    parser = argparse.ArgumentParser(
+        prog="ChEMBL SDF Sharder",
+        description="Shard ChEMBL SDF file into multiple smaller files.")
     parser.add_argument(
         "--input",
         type=Path,
+        required=True,
         dest="sdf_path",
-        default=_sdf_path,
-        help=f"Path to ChEMBL `SDF` file (default: {_sdf_path}",
+        help=f"Path to ChEMBL `SDF` file",
     )
     parser.add_argument(
         "--output",
         type=Path,
+        required=True,
         dest="shards_path",
-        default=_shards_path,
-        help=f"Path where `SDF` shards should be written to (default: {_shards_path}",
+        help=f"Path where `SDF` shards should be written to",
     )
     parser.add_argument(
         "--num-shards",
         type=int,
         dest="num_shards",
-        default=_num_shards,
-        help=f"Number of shards to create (default: {_num_shards}"
+        default=NUM_SHARDS,
+        help=f"Number of shards to create (default: {NUM_SHARDS}"
     )
     parser.add_argument(
         "--num-proc",
         type=int,
         dest="num_proc",
-        default=_num_proc,
-        help=f"Number of processes for exporting (default: {_num_proc}"
+        default=NUM_PROC,
+        help=f"Number of processes for exporting (default: {NUM_PROC}"
     )
 
     args = parser.parse_args()
 
     if not args.sdf_path.exists():
-        raise ValueError("Input file does not exist!")
+        raise FileNotFoundError("Input file does not exist!")
 
     if not args.shards_path.parent.exists():
-        raise ValueError("Parent folder of shards folder does not exist")
+        raise FileNotFoundError(
+            "Parent folder of shards folder does not exist")
 
     if args.num_proc > cpu_count():
-        raise ValueError("Number of processes exceeds number of available CPU cores!")
+        raise OSError(
+            "Number of processes exceeds number of available CPU cores!")
 
     shard_sdf(args.sdf_path, args.shards_path, args.num_shards, args.num_proc)
