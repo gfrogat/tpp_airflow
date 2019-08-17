@@ -1,15 +1,11 @@
 #!/bin/env python
 import argparse
 import logging
-import os
 from pathlib import Path
 
 import pandas as pd
 import requests
 from tqdm import tqdm
-
-_zinc15_dir = Path("/publicdata/tpp/datasets/ZINC15")
-_sdf_path = _zinc15_dir / "sdf"
 
 ZINC15_URL = (
     "https://zinc15.docking.org/activities.sdf"
@@ -30,18 +26,14 @@ def get_page_as_sdf(page: int, sdf_path: Path, url: str = ZINC15_URL):
 def download_zinc15(sdf_path: Path):
     logging.basicConfig(level=logging.DEBUG)
 
-    # compute number of pages
     n_pages = ZINC15_NUM_ITEMS // ZINC15_ITEMS_PER_PAGE + 1
 
-    # create new folder for SDF files
     if not sdf_path.exists():
         sdf_path.mkdir()
 
     pages = range(1, 1 + n_pages)
     failed_pages = []
 
-    # if a file named 'failures.csv' exits, parse the failed pages
-    # and retry to download them
     failures_path = Path("failures.csv")
     if failures_path.exists():
         pages = pd.read_csv("failures.csv", header=None).iloc[:, 0].to_list()
@@ -60,7 +52,7 @@ def download_zinc15(sdf_path: Path):
             outfile.write(f"{failure}\n")
 
     logging.info(f"Written failed pages to {failures_path}")
-    logging.info(("Rerunning this script will attempt to download"
+    logging.info(("Rerunning this script will attempt to download "
                   f"failed pages in {failures_path} again"))
 
 
@@ -72,7 +64,7 @@ if __name__ == "__main__":
         "--output",
         type=str,
         dest="sdf_path",
-        default=_sdf_path,
+        required=True,
         help="Path to store downloaded SDF files"
     )
 
