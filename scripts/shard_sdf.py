@@ -37,8 +37,8 @@ def shard_sdf(sdf_path: Path, shards_path: Path, num_shards: int,
               num_proc: int):
     suppl = Chem.SDMolSupplier(sdf_path.as_posix())
 
-    logging.info(
-        f"Getting number of items in `{sdf_path}`. This can take a while.")
+    logging.info((f"Getting number of items in `{sdf_path}`. "
+                  "This can take a while."))
     num_items = len(suppl)
     shard_size = num_items // num_shards + 1
     logging.info(f"{shard_size} items per shard")
