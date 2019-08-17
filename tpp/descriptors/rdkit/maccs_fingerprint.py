@@ -12,6 +12,4 @@ def calculate_maccs_fp(mol: Chem.Mol) -> List[int]:
     return result.tolist()
 
 
-maccs_fp_schema = [
-    T.StructField("maccs_fp", T.ArrayType(T.IntegerType()), True),
-]
+maccs_fp_schema = [T.StructField("maccs_fp", T.ArrayType(T.IntegerType()), True)]

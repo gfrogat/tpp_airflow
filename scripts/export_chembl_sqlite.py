@@ -50,7 +50,7 @@ compound_export_query = """
         cs.standard_inchi AS inchi,
         cs.standard_inchi_key AS inchikey,
         cs.canonical_smiles AS smiles
-    FROM 
+    FROM
         molecule_dictionary md
     JOIN
         compound_structures cs ON md.molregno = cs.molregno
@@ -64,8 +64,7 @@ def get_query(export_type: ExportType):
         return compound_export_query
 
 
-def export_chembl_sqlite(db_path: Path, parquet_path: Path,
-                         export_type: ExportType):
+def export_chembl_sqlite(db_path: Path, parquet_path: Path, export_type: ExportType):
     logging.info("Connecting to databese")
     cnx = sqlite3.connect(db_path.as_posix())
 
@@ -77,15 +76,22 @@ def export_chembl_sqlite(db_path: Path, parquet_path: Path,
     logging.info("Writing results to file")
     df.to_parquet(parquet_path.as_posix())
 
-    logging.info((f"Successfully exported {export_type} `{db_path}` "
-                  f"to file `{parquet_path}`"))
+    logging.info(
+        (
+            f"Successfully exported {export_type} `{db_path}` "
+            f"to file `{parquet_path}`"
+        )
+    )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog="ChEMBL SQLite Exporter",
-        description=("Export {assays, compounds} from ChEMBL SQLite "
-                     "database in `parquet` format."))
+        description=(
+            "Export {assays, compounds} from ChEMBL SQLite "
+            "database in `parquet` format."
+        ),
+    )
     parser.add_argument(
         "--input",
         required=True,
@@ -107,7 +113,7 @@ if __name__ == "__main__":
         required=True,
         type=ExportType,
         dest="export_type",
-        choices=list(ExportType)
+        choices=list(ExportType),
     )
 
     args = parser.parse_args()
@@ -117,7 +123,8 @@ if __name__ == "__main__":
 
     if not args.parquet_path.parent.exists():
         raise FileNotFoundError(
-            f"Parent folder {args.parquet_path.parent} does not exist!")
+            f"Parent folder {args.parquet_path.parent} does not exist!"
+        )
 
     if args.parquet_path.exists():
         raise FileExistsError(f"{args.parquet_path} already exists!")

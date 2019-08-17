@@ -12,6 +12,4 @@ def calculate_morgan_fp(mol: Chem.Mol) -> List[int]:
     return result.tolist()
 
 
-morgan_fp_schema = [
-    T.StructField("morgan_fp", T.ArrayType(T.IntegerType()), True),
-]
+morgan_fp_schema = [T.StructField("morgan_fp", T.ArrayType(T.IntegerType()), True)]

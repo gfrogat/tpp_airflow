@@ -10,7 +10,7 @@ from rdkit import Chem
 calc = Calculator(descriptors, ignore_3D=True, version="1.2.0")
 
 static_features_schema = [
-    T.StructField("mordred_features", T.ArrayType(T.IntegerType()), True),
+    T.StructField("mordred_features", T.ArrayType(T.IntegerType()), True)
 ]
 
 

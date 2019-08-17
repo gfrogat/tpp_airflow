@@ -11,6 +11,4 @@ def calculate_rdkit_fp(mol: Chem.Mol) -> List[int]:
     return result.tolist()
 
 
-rdkit_fp_schema = [
-    T.StructField("rdkit_fp", T.ArrayType(T.IntegerType()), True)
-]
+rdkit_fp_schema = [T.StructField("rdkit_fp", T.ArrayType(T.IntegerType()), True)]

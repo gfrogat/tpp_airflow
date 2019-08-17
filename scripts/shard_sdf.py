@@ -15,8 +15,12 @@ NUM_SHARDS = 100
 NUM_PROC = 6
 
 
-def export_sdf_shard(shard_meta: Tuple[int, Tuple[int, int]], sdf_path: Path,
-                     shards_path: Path, width: int = 2):
+def export_sdf_shard(
+    shard_meta: Tuple[int, Tuple[int, int]],
+    sdf_path: Path,
+    shards_path: Path,
+    width: int = 2,
+):
     shard_id, item_range = shard_meta
 
     filename = shards_path / f"{sdf_path.stem}_shard{shard_id:0{width}d}"
@@ -33,12 +37,10 @@ def export_sdf_shard(shard_meta: Tuple[int, Tuple[int, int]], sdf_path: Path,
     sdf_writer.close()
 
 
-def shard_sdf(sdf_path: Path, shards_path: Path, num_shards: int,
-              num_proc: int):
+def shard_sdf(sdf_path: Path, shards_path: Path, num_shards: int, num_proc: int):
     suppl = Chem.SDMolSupplier(sdf_path.as_posix())
 
-    logging.info((f"Getting number of items in `{sdf_path}`. "
-                  "This can take a while."))
+    logging.info(f"Getting number of items in `{sdf_path}`. This can take a while.")
     num_items = len(suppl)
     shard_size = num_items // num_shards + 1
     logging.info(f"{shard_size} items per shard")
@@ -83,7 +85,8 @@ def shard_sdf(sdf_path: Path, shards_path: Path, num_shards: int,
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog="ChEMBL SDF Sharder",
-        description="Shard ChEMBL SDF file into multiple smaller files.")
+        description="Shard ChEMBL SDF file into multiple smaller files.",
+    )
     parser.add_argument(
         "--input",
         type=Path,
@@ -103,14 +106,14 @@ if __name__ == "__main__":
         type=int,
         dest="num_shards",
         default=NUM_SHARDS,
-        help=f"Number of shards to create (default: {NUM_SHARDS}"
+        help=f"Number of shards to create (default: {NUM_SHARDS}",
     )
     parser.add_argument(
         "--num-proc",
         type=int,
         dest="num_proc",
         default=NUM_PROC,
-        help=f"Number of processes for exporting (default: {NUM_PROC}"
+        help=f"Number of processes for exporting (default: {NUM_PROC}",
     )
 
     args = parser.parse_args()
@@ -119,11 +122,9 @@ if __name__ == "__main__":
         raise FileNotFoundError("Input file does not exist!")
 
     if not args.shards_path.parent.exists():
-        raise FileNotFoundError(
-            "Parent folder of shards folder does not exist")
+        raise FileNotFoundError("Parent folder of shards folder does not exist")
 
     if args.num_proc > cpu_count():
-        raise OSError(
-            "Number of processes exceeds number of available CPU cores!")
+        raise OSError("Number of processes exceeds number of available CPU cores!")
 
     shard_sdf(args.sdf_path, args.shards_path, args.num_shards, args.num_proc)

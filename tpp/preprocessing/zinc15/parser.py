@@ -42,7 +42,8 @@ class ZINC15SDFParser(parser.SDFParser):
                         inchikey=inchikey,
                         mol_file=mol_block,
                         gene_name=gene_name,
-                        affinity=affinity)
+                        affinity=affinity,
+                    )
                     res.append(row)
                 except Exception:
                     pass

@@ -1,6 +1,5 @@
 from enum import Enum
 
-from .parser import SDFParser
 from .chembl.parser import ChEMBLSDFParser
 from .pubchem.parser import PubChemSDFParser
 from .zinc15.parser import ZINC15SDFParser

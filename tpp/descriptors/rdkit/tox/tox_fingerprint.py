@@ -20,6 +20,4 @@ def calculate_tox_fp(mol: Chem.Mol) -> List[int]:
     return result
 
 
-schema_tox_fp = [
-    T.StructField("tox_fp", T.ArrayType(T.IntegerType()), True),
-]
+schema_tox_fp = [T.StructField("tox_fp", T.ArrayType(T.IntegerType()), True)]

@@ -7,7 +7,6 @@ from pyspark.sql import Row
 
 
 class SDFParser(ABC):
-
     @staticmethod
     @abstractmethod
     def get_schema() -> T.StructType:
@@ -20,7 +19,6 @@ class SDFParser(ABC):
 
 
 class AssayParser(ABC):
-
     @staticmethod
     @abstractmethod
     def parse_assay(filepath: Path) -> List[Row]:

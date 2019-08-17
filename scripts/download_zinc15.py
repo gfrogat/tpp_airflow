@@ -52,20 +52,25 @@ def download_zinc15(sdf_path: Path):
             outfile.write(f"{failure}\n")
 
     logging.info(f"Written failed pages to {failures_path}")
-    logging.info(("Rerunning this script will attempt to download "
-                  f"failed pages in {failures_path} again"))
+    logging.info(
+        (
+            "Rerunning this script will attempt to download "
+            f"failed pages in {failures_path} again"
+        )
+    )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog="ZINC15 SDF Downloader",
-        description="Download ZINC15 BioAssays in SDF format.")
+        description="Download ZINC15 BioAssays in SDF format.",
+    )
     parser.add_argument(
         "--output",
         type=str,
         dest="sdf_path",
         required=True,
-        help="Path to store downloaded SDF files"
+        help="Path to store downloaded SDF files",
     )
 
     args = parser.parse_args()

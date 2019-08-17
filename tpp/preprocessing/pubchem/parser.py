@@ -36,10 +36,7 @@ class PubChemSDFParser(parser.SDFParser):
                         cid = mol.GetProp("PUBCHEM_COMPOUND_CID")
                         inchikey = Chem.MolToInchiKey(mol)
                         mol_block = Chem.MolToMolBlock(mol)
-                        row = Row(
-                            mol_id=cid,
-                            inchikey=inchikey,
-                            mol_file=mol_block)
+                        row = Row(mol_id=cid, inchikey=inchikey, mol_file=mol_block)
                         res.append(row)
                     except Exception:
                         pass
@@ -68,10 +65,7 @@ class PubChemAssayParser(parser.AssayParser):
                         activity_outcome = row["PUBCHEM_ACTIVITY_OUTCOME"]
                         if activity_outcome in PubChemAssayParser.activity_outcomes:
                             activity = 3 if activity_outcome == "Active" else 1
-                            row = Row(
-                                aid=aid,
-                                cid=cid,
-                                activity=activity)
+                            row = Row(aid=aid, cid=cid, activity=activity)
                             res.append(row)
                     except (ValueError, TypeError):
                         pass

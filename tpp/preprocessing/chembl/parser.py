@@ -33,10 +33,7 @@ class ChEMBLSDFParser(parser.SDFParser):
                     chembl_id = mol.GetProp("chembl_id")
                     inchikey = Chem.MolToInchiKey(mol)
                     mol_block = Chem.MolToMolBlock(mol)
-                    row = Row(
-                        mol_id=chembl_id,
-                        inchikey=inchikey,
-                        mol_file=mol_block)
+                    row = Row(mol_id=chembl_id, inchikey=inchikey, mol_file=mol_block)
                     res.append(row)
                 except Exception:
                     pass
