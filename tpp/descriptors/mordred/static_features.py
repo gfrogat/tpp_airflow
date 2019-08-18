@@ -2,7 +2,7 @@ from typing import List
 
 import numpy as np
 import pyspark.sql.types as T
-from pyspark.ml.linalg import VectorUDT
+from pyspark.ml.linalg import VectorUDT, Vectors
 from mordred import Calculator, descriptors
 from rdkit import Chem
 
@@ -22,4 +22,4 @@ class StaticFeatures(object):
     def calculate(mol: Chem.Mol) -> List[float]:
         result = calc(mol)
         result = np.fromiter(result.values(), float)
-        return result.tolist()
+        return Vectors.dense(result)
