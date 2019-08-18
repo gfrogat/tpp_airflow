@@ -20,4 +20,6 @@ def get_socket_logger(
         socket_handler = logging.handlers.SocketHandler(host, port)
         logger.addHandler(socket_handler)
 
+    logger.info("Initialize Logger Executor")
+
     return logger
