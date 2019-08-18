@@ -8,7 +8,7 @@ from tpp.utils import get_socket_logger
 
 class StaticCalculator(object):
     logger = get_socket_logger("StaticCalculator")
-    schema = T.StructType([StaticFeatures.get_schema()])
+    schema = T.StructType(StaticFeatures.get_schema())
 
     @staticmethod
     def get_schema() -> T.StructType:
