@@ -11,6 +11,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--input",
+        required=True,
         type=Path,
         metavar="PATH",
         dest="sdf_path",
@@ -18,17 +19,31 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--output",
+        required=True,
         type=Path,
         metavar="PATH",
         dest="parquet_path",
-        required=True,
         help="Path where output should be written to in `parquet` format",
     )
     parser.add_argument(
         "--dataset", required=True, type=Dataset, dest="dataset", choices=list(Dataset)
     )
+    parser.add_argument(
+        "--num-partitions", type=int, dest="num_partitions", default=200
+    )
 
     args = parser.parse_args()
+
+    if not args.sdf_path.exists():
+        raise FileNotFoundError(f"Path {args.sdf_path} does not exist")
+
+    if not args.parquet_path.parent.exists():
+        raise FileNotFoundError(
+            f"Parent folder {args.parquet_path.parent} does not exist!"
+        )
+
+    if args.parquet_path.exists():
+        raise FileExistsError(f"{args.parquet_path} already exists!")
 
     sdf_parser = get_sdf_parser(args.dataset)
     schema = sdf_parser.get_schema()
@@ -43,8 +58,8 @@ if __name__ == "__main__":
 
         sc = spark.sparkContext
 
-        sdf_files = args.sdf_path.glob("*.sdf")
-        sdf_files = sc.parallelize(list(sdf_files)).limit(10).repartition(200)
+        sdf_files = list(args.sdf_path.glob("*.sdf"))
+        sdf_files = sc.parallelize(sdf_files).repartition(args.num_partitions)
 
         sdf_parquet = sdf_files.flatMap(sdf_parser.parse_sdf).toDF(schema=schema)
 
