@@ -1,9 +1,5 @@
 from enum import Enum
 
-from .chembl.parser import ChEMBLSDFParser
-from .pubchem.parser import PubChemSDFParser
-from .zinc15.parser import ZINC15SDFParser
-
 
 class Dataset(Enum):
     CHEMBL = "ChEMBL"
@@ -16,8 +12,14 @@ class Dataset(Enum):
 
 def get_sdf_parser(dataset: Dataset):
     if dataset == Dataset.CHEMBL:
+        from .chembl.sdf_parser import ChEMBLSDFParser
+
         return ChEMBLSDFParser
     elif dataset == Dataset.PUBCHEM:
+        from .pubchem.sdf_parser import PubChemSDFParser
+
         return PubChemSDFParser
     elif dataset == Dataset.ZINC15:
+        from .zinc15.sdf_parser import ZINC15SDFParser
+
         return ZINC15SDFParser
