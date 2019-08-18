@@ -25,7 +25,7 @@ def get_feature_calculator(feature_type: FeatureType):
         from .tox_calculator import ToxCalculator
 
         return ToxCalculator
-    elif feature_type == FeatureType.MORDRED:
+    elif feature_type == FeatureType.STATIC:
         from .static_calculator import StaticCalculator
 
         return StaticCalculator
