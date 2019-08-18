@@ -2,6 +2,7 @@ from typing import List
 
 import numpy as np
 import pyspark.sql.types as T
+from pyspark.ml.linalg import VectorUDT
 from mordred import Calculator, descriptors
 from rdkit import Chem
 
@@ -11,7 +12,7 @@ calc = Calculator(descriptors, ignore_3D=True, version="1.2.0")
 
 
 class StaticFeatures(object):
-    schema = [T.StructField("mordred_features", T.ArrayType(T.IntegerType()), True)]
+    schema = [T.StructField("mordred_features", VectorUDT(), True)]
 
     @staticmethod
     def get_schema() -> List[T.StructField]:
