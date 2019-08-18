@@ -2,18 +2,15 @@ import pyspark.sql.types as T
 from pyspark.sql import Row
 from rdkit import Chem
 
-from tpp.descriptors.rdkit import (
-    calculate_maccs_fp,
-    calculate_rdkit_fp,
-    maccs_fp_schema,
-    rdkit_fp_schema,
-)
+from tpp.descriptors.rdkit import MACCSFingerprinter, RDKitFingerprinter
 from tpp.utils import get_socket_logger
 
 
 class SemiSparsCalculator(object):
     logger = get_socket_logger("SemiSparseCalculator")
-    schema = T.StructType(rdkit_fp_schema + maccs_fp_schema)
+    schema = T.StructType(
+        MACCSFingerprinter.get_schema() + RDKitFingerprinter.get_schema()
+    )
 
     @staticmethod
     def calculate_descriptors(molfile):
@@ -24,8 +21,8 @@ class SemiSparsCalculator(object):
 
         if mol is not None:
             try:
-                rdkit_fp = calculate_rdkit_fp(mol)
-                maccs_fp = calculate_maccs_fp(mol)
+                rdkit_fp = RDKitFingerprinter.calculate(mol)
+                maccs_fp = MACCSFingerprinter.calculate(mol)
             except Exception:
                 SemiSparsCalculator.logger.exception("Error computing descriptors")
                 rdkit_fp = None

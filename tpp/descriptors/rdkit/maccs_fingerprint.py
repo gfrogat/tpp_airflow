@@ -6,10 +6,15 @@ from rdkit.Chem import MACCSkeys
 import numpy as np
 
 
-def calculate_maccs_fp(mol: Chem.Mol) -> List[int]:
-    result = MACCSkeys.GenMACCSKeys(mol)
-    result = np.nonzero(result)[0]
-    return result.tolist()
+class MACCSFingerprinter(object):
+    schema = [T.StructField("maccs_fp", T.ArrayType(T.IntegerType()), True)]
 
+    @staticmethod
+    def get_schema() -> List[T.StructField]:
+        return MACCSFingerprinter.schema
 
-maccs_fp_schema = [T.StructField("maccs_fp", T.ArrayType(T.IntegerType()), True)]
+    @staticmethod
+    def calculate(mol: Chem.Mol) -> List[int]:
+        result = MACCSkeys.GenMACCSKeys(mol)
+        result = np.nonzero(result)[0]
+        return result.tolist()

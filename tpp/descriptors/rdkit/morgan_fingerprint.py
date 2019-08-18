@@ -6,10 +6,15 @@ import pyspark.sql.types as T
 import numpy as np
 
 
-def calculate_morgan_fp(mol: Chem.Mol) -> List[int]:
-    result = AllChem.GetMorganFingerprintAsBitVect(mol, 3, nBits=4096)
-    result = np.nonzero(result)[0]
-    return result.tolist()
+class MorganFingerprinter(object):
+    schema = [T.StructField("morgan_fp", T.ArrayType(T.IntegerType()), True)]
 
+    @staticmethod
+    def get_schema() -> List[T.StructField]:
+        return MorganFingerprinter.schema
 
-morgan_fp_schema = [T.StructField("morgan_fp", T.ArrayType(T.IntegerType()), True)]
+    @staticmethod
+    def calculate(mol: Chem.Mol) -> List[int]:
+        result = AllChem.GetMorganFingerprintAsBitVect(mol, 3, nBits=4096)
+        result = np.nonzero(result)[0]
+        return result.tolist()
