@@ -6,6 +6,7 @@ from pyspark.sql import Row
 from rdkit import Chem
 
 from .. import parser
+from tpp.utils import get_socket_logger
 
 
 class ChEMBLSDFParser(parser.SDFParser):
@@ -16,6 +17,7 @@ class ChEMBLSDFParser(parser.SDFParser):
             T.StructField("mol_file", T.StringType(), False),
         ]
     )
+    logger = get_socket_logger("ChEMBLSDFParser")
 
     @staticmethod
     def get_schema() -> T.StructType:
@@ -36,6 +38,9 @@ class ChEMBLSDFParser(parser.SDFParser):
                     row = Row(mol_id=chembl_id, inchikey=inchikey, mol_file=mol_block)
                     res.append(row)
                 except Exception:
-                    pass
+                    if "chembl_id" in locals():
+                        ChEMBLSDFParser.logger.exception(f"Error parsing {chembl_id}")
+                    else:
+                        ChEMBLSDFParser.logger.exception("Error parsing UNKNOWN")
 
         return res

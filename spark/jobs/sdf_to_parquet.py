@@ -5,10 +5,10 @@ from pyspark.sql import SparkSession
 
 from tpp.preprocessing import Dataset, get_sdf_parser
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        prog="PySpark SDF Export",
-        description="Export SDF to `parquet` format")
+        prog="PySpark SDF Export", description="Export SDF to `parquet` format"
+    )
     parser.add_argument(
         "--input",
         type=Path,
@@ -25,11 +25,7 @@ if __name__ == '__main__':
         help="Path where output should be written to in `parquet` format",
     )
     parser.add_argument(
-        "--dataset",
-        required=True,
-        type=Dataset,
-        dest="dataset",
-        choices=list(Dataset)
+        "--dataset", required=True, type=Dataset, dest="dataset", choices=list(Dataset)
     )
 
     args = parser.parse_args()
@@ -38,29 +34,23 @@ if __name__ == '__main__':
     schema = sdf_parser.get_schema()
 
     try:
-        spark = SparkSession \
-            .builder \
-            .appName("Process ChEMBL25 Assays") \
-            .config("spark.sql.execution.arrow.enabled", "true") \
-            .config("spark.serializer",
-                    "org.apache.spark.serializer.KryoSerializer") \
+        spark = (
+            SparkSession.builder.appName("Process ChEMBL25 Assays")
+            .config("spark.sql.execution.arrow.enabled", "true")
+            .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
             .getOrCreate()
+        )
 
         sc = spark.sparkContext
 
-        sdf_files = list(sdf_path)
-        sdf_files = sc \
-            .parallelize(list(sdf_path)) \
-            .repartition(200)
+        sdf_files = args.sdf_path.glob("*.sdf")
+        sdf_files = sc.parallelize(list(sdf_files)).limit(10).repartition(200)
 
-        sdf_parquet = sdf_files \
-            .flatMap(sdf_parser.parse_sdf) \
-            .toDF(schema=schema)
+        sdf_parquet = sdf_files.flatMap(sdf_parser.parse_sdf).toDF(schema=schema)
 
-        sdf_parquet \
-            .write \
-            .parquet(parquet_path.as_posix())
+        sdf_parquet.write.parquet(args.parquet_path.as_posix())
     except Exception:
-    # handle exception
+        # handle exception
+        pass
     finally:
         spark.stop()

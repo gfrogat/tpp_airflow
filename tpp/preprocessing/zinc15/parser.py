@@ -6,6 +6,7 @@ from pyspark.sql import types as T
 from rdkit import Chem
 
 from .. import parser
+from tpp.utils import get_socket_logger
 
 
 class ZINC15SDFParser(parser.SDFParser):
@@ -18,6 +19,7 @@ class ZINC15SDFParser(parser.SDFParser):
             T.StructField("affinity", T.DoubleType(), False),
         ]
     )
+    logger = get_socket_logger("ZINC15SDFParser")
 
     @staticmethod
     def get_schema() -> T.StructType:
@@ -46,6 +48,9 @@ class ZINC15SDFParser(parser.SDFParser):
                     )
                     res.append(row)
                 except Exception:
-                    pass
+                    if "zinc_id" in locals():
+                        ZINC15SDFParser.logger.exception(f"Error parsing {zinc_id}")
+                    else:
+                        ZINC15SDFParser.logger.exception("Error parsing UNKNOWN")
 
         return res

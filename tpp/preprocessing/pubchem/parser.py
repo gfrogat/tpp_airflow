@@ -9,6 +9,7 @@ from pyspark.sql import types as T
 from rdkit import Chem
 
 from .. import parser
+from tpp.utils import get_socket_logger
 
 
 class PubChemSDFParser(parser.SDFParser):
@@ -19,6 +20,7 @@ class PubChemSDFParser(parser.SDFParser):
             T.StructField("mol_file", T.StringType(), False),
         ]
     )
+    logger = get_socket_logger("PubChemSDFParser")
 
     @staticmethod
     def get_schema() -> T.StructType:
@@ -39,13 +41,17 @@ class PubChemSDFParser(parser.SDFParser):
                         row = Row(mol_id=cid, inchikey=inchikey, mol_file=mol_block)
                         res.append(row)
                     except Exception:
-                        pass
+                        if "cid" in locals():
+                            PubChemSDFParser.logger.exception(f"Error parsing {cid}")
+                        else:
+                            PubChemSDFParser.logger.exception("Error parsing UNKNOWN")
 
         return res
 
 
 class PubChemAssayParser(parser.AssayParser):
     activity_outcomes = ["Active", "Inactive"]
+    logger = get_socket_logger("PubChemAssayParser")
 
     @staticmethod
     def _cast_int(string: str) -> int:
@@ -67,8 +73,11 @@ class PubChemAssayParser(parser.AssayParser):
                             activity = 3 if activity_outcome == "Active" else 1
                             row = Row(aid=aid, cid=cid, activity=activity)
                             res.append(row)
-                    except (ValueError, TypeError):
-                        pass
+                    except Exception:
+                        if "cid" in locals():
+                            PubChemAssayParser.logger.exception(f"Error parsing {cid}")
+                        else:
+                            PubChemAssayParser.logger.exception("Error parsing UNKNOWN")
 
         return res
 
