@@ -6,11 +6,15 @@ from tpp.descriptors.rdkit import MACCSFingerprinter, RDKitFingerprinter
 from tpp.utils import get_socket_logger
 
 
-class SemiSparsCalculator(object):
+class SemiSparseCalculator(object):
     logger = get_socket_logger("SemiSparseCalculator")
     schema = T.StructType(
         MACCSFingerprinter.get_schema() + RDKitFingerprinter.get_schema()
     )
+
+    @staticmethod
+    def get_schema() -> T.StructType:
+        return SemiSparseCalculator.schema
 
     @staticmethod
     def calculate_descriptors(molfile):
@@ -24,7 +28,7 @@ class SemiSparsCalculator(object):
                 rdkit_fp = RDKitFingerprinter.calculate(mol)
                 maccs_fp = MACCSFingerprinter.calculate(mol)
             except Exception:
-                SemiSparsCalculator.logger.exception("Error computing descriptors")
+                SemiSparseCalculator.logger.exception("Error computing descriptors")
                 rdkit_fp = None
                 maccs_fp = None
 

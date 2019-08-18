@@ -11,6 +11,10 @@ class ToxCalculator(object):
     schema = T.StructType(ToxFingerprinter.get_schema())
 
     @staticmethod
+    def get_schema() -> T.StructType:
+        return ToxCalculator.schema
+
+    @staticmethod
     def calculate_descriptors(molfile):
         mol = Chem.MolFromMolBlock(molfile)
 
