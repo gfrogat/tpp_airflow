@@ -1,12 +1,13 @@
 from pathlib import Path
 from typing import List
 
-from pyspark.sql import types as T
 from pyspark.sql import Row
+from pyspark.sql import types as T
 from rdkit import Chem
 
-from .. import parser
 from tpp.utils import get_socket_logger
+
+from .. import parser
 
 
 class ChEMBLSDFParser(parser.SDFParser):
