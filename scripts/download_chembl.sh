@@ -1,7 +1,5 @@
 #!/bin/env bash
 
-CHEMBL_DIR="/publicdata/tpp/datasets/ChEMBL"
-
 # Templates for url variables
 SQLITE_URL_TEMPLATE="CHEMBL_RELEASE_SQLITE_URL"
 SDF_URL_TEMPLATE="CHEMBL_RELEASE_SDF_URL"
@@ -34,10 +32,17 @@ else
     echo "ChEMBL release is set to ${RELEASE}";
 fi
 
+if [[ -z ${CHEMBL_DIR} ]]; then
+    echo "ChEMBL output dir is not set";
+    echo "Set CHEMBL_DIR evironment variable and rerun script";
+    echo "Example: CHEMBL_DIR=/data bash download_chembl.sh"
+    exit
+fi
+
 CHEMBL_SQLITE_URL=${SQLITE_URL_TEMPLATE/RELEASE/${RELEASE}}
 CHEMBL_SDF_URL=${SDF_URL_TEMPLATE/RELEASE/${RELEASE}}
 
 CHEMBL_RELEASE="chembl_"${RELEASE}
 
-wget -P ${CHEMBL_DIR}/${CHEMBL_RELEASE} ${!CHEMBL_SQLITE_URL}
-wget -P ${CHEMBL_DIR}/${CHEMBL_RELEASE} ${!CHEMBL_SDF_URL}
+wget -P "${CHEMBL_DIR}/${CHEMBL_RELEASE}" "${!CHEMBL_SQLITE_URL}"
+wget -P "${CHEMBL_DIR}/${CHEMBL_RELEASE}" "${!CHEMBL_SDF_URL}"

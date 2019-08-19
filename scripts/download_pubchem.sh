@@ -6,5 +6,13 @@ PUBCHEM_COMPOUND_URL="ftp://ftp.ncbi.nlm.nih.gov/pubchem/Compound/CURRENT-Full/S
 
 PUBCHEM_VERSION="pubchem_"$(date +"%Y%m%d")
 
-wget -mP ${PUBCHEM_DIR}/"${PUBCHEM_VERSION}" ${PUBCHEM_BIOASSAY_URL}
-wget -mP ${PUBCHEM_DIR}/"${PUBCHEM_VERSION}" ${PUBCHEM_COMPOUND_URL}
+
+if [[ -z ${PUBCHEM_DIR} ]]; then
+    echo "PubChem output dir is not set";
+    echo "Set PUBCHEM_DIR evironment variable and rerun script";
+    echo "Example: PUBCHEM_DIR=/data bash download_pubchem.sh"
+    exit
+fi
+
+wget -mP "${PUBCHEM_DIR}/${PUBCHEM_VERSION}" "${PUBCHEM_BIOASSAY_URL}"
+wget -mP "${PUBCHEM_DIR}/${PUBCHEM_VERSION}" "${PUBCHEM_COMPOUND_URL}"
