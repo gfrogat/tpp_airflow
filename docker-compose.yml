@@ -1,0 +1,36 @@
+version: "3"
+services:
+  airflow:
+    build:
+      context: .
+      dockerfile: ./tools/docker/airflow.Dockerfile
+    networks:
+      - tpp
+    depends_on:
+      - rabbitmq
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+  web:
+    build:
+      context: .
+      dockerfile: ./tools/docker/nginx.Dockerfile
+    depends_on:
+      - airflow
+    networks:
+      - tpp
+    ports:
+      - "8000:80"
+  rabbitmq:
+    build:
+      context: .
+      dockerfile: ./tools/docker/rabbitmq.Dockerfile
+    ports:
+      - "5672:5672"
+    networks:
+      - tpp
+  networks:
+    tpp:
+      driver: bridge
+  extra_hosts:
+    - "db:172.17.0.1"
