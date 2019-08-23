@@ -10,12 +10,22 @@ ENV LC_ALL en_US.UTF-8
 ENV LC_CTYPE en_US.UTF-8
 ENV LC_MESSAGES en_US.UTF-8
 
-COPY script/entrypoint.sh /entrypoint.sh
+RUN apt-get update -y && apt-get install -y \
+    --no-install-recommends \
+    apt-utils \
+    build-essential \
+    curl \
+    git \
+    locales \
+    rsync \
+ && rm -rf /var/lib/apt/lists/*
+
+
+COPY tools/docker/scripts/airflow_entrypoint.sh /entrypoint.sh
 COPY requirements.txt /requirements.txt
 
-RUN pip3 install -f requirements.txt
+RUN pip3 install -r /requirements.txt
 
 EXPOSE 8080
 
-USER airflow
-ENTRYPOINT ["/airflow_entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]

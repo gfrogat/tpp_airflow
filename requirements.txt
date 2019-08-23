@@ -1,2 +1,1 @@
-apache-airflow[celery,postgres,rabbitmq]
-cryptography
+apache-airflow[celery,crypto,postgres]
