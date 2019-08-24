@@ -11,6 +11,8 @@ services:
     ports:
       - "8080:8080"
       - "8081:8081"
+    extra_hosts:
+    - "db:172.17.0.1"
   web:
     build:
       context: .
@@ -29,8 +31,6 @@ services:
       - "5672:5672"
     networks:
       - tpp
-  networks:
-    tpp:
-      driver: bridge
-  extra_hosts:
-    - "db:172.17.0.1"
+networks:
+  tpp:
+    driver: bridge
