@@ -1,4 +1,5 @@
 version: "3"
+
 services:
   airflow:
     build:
@@ -8,11 +9,14 @@ services:
       - tpp
     depends_on:
       - rabbitmq
+    env:
+      - AIRFLOW__WEBSERVER__BASE_URL=http://localhost/airflow
     ports:
       - "8080:8080"
       - "8081:8081"
     extra_hosts:
-    - "db:172.17.0.1"
+      - "db:172.17.0.1"
+
   web:
     build:
       context: .
@@ -23,6 +27,7 @@ services:
       - tpp
     ports:
       - "8000:80"
+
   rabbitmq:
     build:
       context: .
@@ -31,6 +36,7 @@ services:
       - "5672:5672"
     networks:
       - tpp
+
 networks:
   tpp:
     driver: bridge
