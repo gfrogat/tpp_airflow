@@ -2,53 +2,46 @@ version: "3"
 
 services:
   airflow-web:
-    build:
-      context: .
-      dockerfile: ./tools/docker/airflow.Dockerfile
-    restart: always
+    image: ml-jku/airflow
     volumes:
       - ./dags:${AIRFLOW_HOME}/dags
-    networks:
-      - tpp
-    env_file:
-      - airflow.env
     ports:
       - 8080:8080
+    env_file:
+      - airflow.env
+    networks:
+      - tpp
     extra_hosts:
       - ${DB_SERVER}:${DB_SERVER_DOCKER_IP}
     command: webserver
 
   flower-web:
-    build:
-      context: .
-      dockerfile: ./tools/docker/airflow.Dockerfile
+    image: ml-jku/airflow
     restart: always
-    networks:
-      - tpp
-    env_file:
-      - airflow.env
     ports:
       - 5555:5555
+    env_file:
+      - airflow.env
+    networks:
+      - tpp
     extra_hosts:
       - ${DB_SERVER}:${DB_SERVER_DOCKER_IP}
     command: flower
 
   airflow-scheduler:
-    build:
-      context: .
-      dockerfile: ./tools/docker/airflow.Dockerfile
+    image: ml-jku/airflow
     restart: always
     depends_on:
       - airflow-web
     volumes:
       - ./dags:${AIRFLOW_HOME}/dags
-    networks:
-      - tpp
     env_file:
       - airflow.env
+    networks:
+      - tpp
     extra_hosts:
       - ${DB_SERVER}:${DB_SERVER_DOCKER_IP}
-    command: flower
+    command: scheduler
 
   web:
     image: nginx:alpine
@@ -65,3 +58,6 @@ services:
 networks:
   tpp:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16
