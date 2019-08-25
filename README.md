@@ -56,3 +56,7 @@ sudo rabbitmqctl set_permissions -p airflow airflow ".*" ".*" ".*"
 ```bash
 sudo ufw allow from 172.18.0.0/16 to any port 5672
 ```
+
+## Environment Settings
+
+The settings for the containers running Airflow is stored in `airflow.env`. If you change something rebuild the containers
