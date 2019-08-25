@@ -22,16 +22,7 @@ services:
     ports:
       - 80:80
     depends_on:
-      - airflow
-    networks:
-      - tpp
-
-  rabbitmq:
-    build:
-      context: .
-      dockerfile: ./tools/docker/rabbitmq.Dockerfile
-    ports:
-      - 5672:5672
+      - airflow-web
     networks:
       - tpp
 
