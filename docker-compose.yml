@@ -1,7 +1,8 @@
-version: "3"
+version: "3.7"
 
 services:
   airflow-web:
+    container_name: airflow-web
     image: ml-jku/airflow
     volumes:
       - ./dags:${AIRFLOW_HOME}/dags
@@ -13,9 +14,16 @@ services:
       - tpp
     extra_hosts:
       - ${DB_SERVER}:${DB_SERVER_DOCKER_IP}
+    secrets:
+      - ca-cert
+      - postgres-client-key
+      - postgres-client-cert
+      - rabbitmq-client-key
+      - rabbitmq-client-cert
     command: webserver
 
   flower-web:
+    container_name: flower-web
     image: ml-jku/airflow
     restart: always
     ports:
@@ -26,9 +34,16 @@ services:
       - tpp
     extra_hosts:
       - ${DB_SERVER}:${DB_SERVER_DOCKER_IP}
+    secrets:
+      - ca-cert
+      - postgres-client-key
+      - postgres-client-cert
+      - rabbitmq-client-key
+      - rabbitmq-client-cert
     command: flower
 
   airflow-scheduler:
+    container_name: airflow-scheduler
     image: ml-jku/airflow
     restart: always
     depends_on:
@@ -41,19 +56,33 @@ services:
       - tpp
     extra_hosts:
       - ${DB_SERVER}:${DB_SERVER_DOCKER_IP}
+    secrets:
+      - ca-cert
+      - postgres-client-key
+      - postgres-client-cert
+      - rabbitmq-client-key
+      - rabbitmq-client-cert
     command: scheduler
 
-  web:
+  nginx-web:
+    container_name: nginx-web
     image: nginx:alpine
     volumes:
-      - ./web/nginx-default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx/conf.d:/etc/nginx/conf.d:ro
     ports:
       - 80:80
+      - 443:443
     depends_on:
       - airflow-web
       - flower-web
     networks:
       - tpp
+    secrets:
+      - ca-cert
+      - nginx-key
+      - nginx-cert
+      - nginx-dhparam
 
 networks:
   tpp:
@@ -61,3 +90,21 @@ networks:
     ipam:
       config:
         - subnet: 172.18.0.0/16
+
+secrets:
+  ca-cert:
+    file: ./secrets/ca-cert.pem
+  nginx-dhparam:
+    file: ./secrets/nginx/dhparam.pem
+  nginx-key:
+    file: ./secrets/nginx/server-key.pem
+  nginx-cert:
+    file: ./secrets/nginx/server-cert.pem
+  postgres-client-key:
+    file: ./secrets/postgres/client-key.pem
+  postgres-client-cert:
+    file: ./secrets/postgres/client-cert.pem
+  rabbitmq-client-key:
+    file: ./secrets/rabbitmq/client-key.pem
+  rabbitmq-client-cert:
+    file: ./secrets/rabbitmq/client-cert.pem
