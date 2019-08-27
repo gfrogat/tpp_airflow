@@ -11,7 +11,7 @@ The certificates will be mounted in the Docker containers as [secrets](https://d
 mkdir secrets && cd secrets
 ```
 
-### CA Cert
+### Self-Signed CA Cert
 
 ```bash
 openssl req -new -nodes -text -out ca.csr -keyout ca-key.pem -subj "/CN=ca.ml.jku.at"
@@ -79,7 +79,7 @@ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO airflow;
 ALTER ROLE airflow SET search_path = airflow, public;
 ```
 
-### Update `postgresql.conf`
+### Update postgresql.conf
 
 ```bash
 # Ubuntu: /etc/postgresql/10/main/postgresql.conf
@@ -92,7 +92,7 @@ ssl_key_file = '/etc/ssl/postgresql/server-key.pem'
 ssl_ca_file = '/etc/ssl/postgresql/ca-cert.pem'
 ```
 
-### Update `pg_hba.conf`
+### Update pg_hba.conf
 
 ```bash
 # Ubuntu: /etc/postgresql/10/main/pg_hba.conf
@@ -119,7 +119,7 @@ rabbitmqctl set_user_tags airflow airflow
 rabbitmqctl set_permissions -p airflow airflow ".*" ".*" ".*"
 ```
 
-### Create `rabbitmq.conf`
+### Create rabbitmq.conf
 
 [Template](https://github.com/rabbitmq/rabbitmq-server/blob/master/docs/rabbitmq.conf.example)
 
@@ -148,35 +148,50 @@ management.ssl.keyfile    = /etc/ssl/rabbitmq/server-key.pem
 systemctl restart rabbitmq-server
 ```
 
-### Docker Setup
-
-## Fernet Key
-
-H21rWrmCYKrax24qvFb-K37IbnHCXFfo-67EIIQxeow=
-
-Triggering Task --> only trigger each task once, otherwise error!
+## Firewall Setup
 
 ```bash
 sudo ufw allow from 172.18.0.0/16 to any port 5672
 ```
 
+## Initialize the database
+
+```bash
+bash scripts/init_db.sh
+```
+
+## Reset the database
+
+```bash
+bash scripts/init_db.sh
+```
+
 ## Environment Settings
 
-The settings for the containers running Airflow is stored in `airflow.env`. If you change something rebuild the container.
+Environment settings for the containers running Airflow are stored in `airflow.env`. Docker-compose additionaly needs additional environment variables which are stored in `.env`.
+
+Create a new `.env` file from the `.env.template` template and you are good to go.
 
 ```bash
 bash scripts/build-containers.sh
 ```
 
-### Updateing SqlAlchemy connection strings
+### Securing Connections
+
+Generate a custom fernet key via Python snippet and add it as `AIRFLOW__CORE__FERNET_KEY=your_fernet_key` to `airflow.env`.
+
+```python
+from cryptography.fernet import Fernet
+fernet_key= Fernet.generate_key()
+print(fernet_key.decode()) # your fernet_key, keep it in secured place!
+```
+
+For details see: [Airflow Docs](https://airflow.readthedocs.io/en/stable/howto/secure-connections.html)
+
+### Updateing SQLAlchemy connection strings
 
 The file `airflow.env` contains the config for the docker container. If you want to run airflow without Docker (e.g. for depelopment / debugging) you have to update the connections strings.
-
-Generate sqlalchemy connection string for postgres
-
-The SqlAlchemy connection string is an [RFC-1738-style string`](https://www.urlencoder.io/learn/).
-
-More information can be found in the [Airflow Docs](https://airflow.apache.org/howto/connection/postgres.html) on postgres.
+The SQLAlchemy connection string is an [RFC-1738-style string`](https://www.urlencoder.io/learn/). More information can be found in the [Airflow Docs](https://airflow.apache.org/howto/connection/postgres.html) on postgres.
 
 You can generate your string using `urllib` in Python. Just update the paths in the snippet below and run it.
 
@@ -191,4 +206,14 @@ params = {
 }
 
 urllib.parse.urlencode(params)
+```
+
+### Use airflow.env without Docker
+
+You can use `airflow.env` as template for your non-dockerized Airflow setup. You can add the variables to your environment via:
+
+```bash
+set -o allexport
+source airflow.env
+set +o allexport
 ```
