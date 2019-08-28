@@ -33,11 +33,10 @@ RUN pip3 install --no-cache -U pip setuptools wheel \
 
 EXPOSE 8080 5555
 
-RUN useradd --create-home --shell /bin/bash --no-log-init airflow 
+RUN useradd --create-home --shell /bin/bash --no-log-init airflow
 
 ENV AIRFLOW_HOME ${AIRFLOW_HOME}
-RUN mkdir ${AIRFLOW_HOME}
-RUN chown airflow:airflow ${AIRFLOW_HOME}
+RUN mkdir ${AIRFLOW_HOME} && chown airflow:airflow ${AIRFLOW_HOME}
 
 USER airflow
 WORKDIR /home/airflow
