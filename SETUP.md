@@ -22,13 +22,13 @@ SUBJECT_COMMON="\
 /OU=Target Prediction Platform"
 
 SUBJECT_DETAIL="\
-/CN=demosite.ml.jku.at\
+/CN=ca.ml.jku.at\
 /emailAddress=tpp@ml.jku.at"
 
 openssl req -new -nodes -text -out ca.csr -keyout ca-key.pem -subj "${SUBJECT_COMMON}${SUBJECT_DETAIL}"
 openssl x509 -req -in ca.csr -text -extfile /etc/ssl/openssl.cnf -extensions v3_ca -signkey ca-key.pem -out ca-cert.pem
 
-chmod 600 *.pem
+chmod 600 *.csr *.pem
 ```
 
 ### Generate Certificates for PostgreSQL / RabbitMQ
@@ -41,24 +41,33 @@ SUBJECT_DETAIL="\
 /emailAddress=tpp@ml.jku.at"
 
 openssl req -new -nodes -text -out server.csr -keyout server-key.pem -subj "${SUBJECT_COMMON}${SUBJECT_DETAIL}"
-openssl x509 -req -in server.csr -text -CA ../ca-cert.pem -CAkey ../ca-key.pem -CAcreateserial -out server-cert.pem
+openssl x509 -req -in server.csr -text -CA ca-cert.pem -CAkey ca-key.pem -CAcreateserial -out server-cert.pem
+
+openssl verify -CAfile ca-cert.pem server-cert.pem
 
 SUBJECT_DETAIL="\
 /CN=demosite-client.ml.jku.at\
 /emailAddress=tpp@ml.jku.at"
 
 openssl req -new -nodes -text -out client.csr -keyout client-key.pem -subj "${SUBJECT_COMMON}${SUBJECT_DETAIL}"
-openssl x509 -req -in client.csr -text -CA ../ca-cert.pem -CAkey ../ca-key.pem -CAcreateserial -out client-cert.pem
+openssl x509 -req -in client.csr -text -CA ca-cert.pem -CAkey ca-key.pem -CAcreateserial -out client-cert.pem
+
+openssl verify -CAfile ca-cert.pem client-cert.pem
 
 chmod 600 *.csr *.pem
 
 #SERVICE=postgres
 #SERVICE=rabbitmq
 
-mkdir -p /etc/ssl/${SERVICE}
-cp ../ca-cert.pem server-cert.pem server-key.pem /etc/ssl/${SERVICE}
-chmod -R 700 /etc/ssl/${SERVICE}
-chown -R ${SERVICE}:${SERVICE} /etc/ssl/${SERVICE}
+sudo mkdir -p /etc/ssl/${SERVICE}
+sudo cp ca-cert.pem server-cert.pem server-key.pem /etc/ssl/${SERVICE}
+sudo chmod -R 700 /etc/ssl/${SERVICE}
+sudo chown -R ${SERVICE}:${SERVICE} /etc/ssl/${SERVICE}
+
+
+# Restart Databases
+sudo systemctl restart postgresql
+sudo systemctl restart rabbitmq-server
 ```
 
 ### Generate Certificate for NGINX
@@ -81,7 +90,6 @@ openssl x509 -req -in server.csr -text -CA ../ca-cert.pem -CAkey ../ca-key.pem -
 openssl dhparam -out dhparam.pem 4096
 
 chmod 600 *.csr *.pem
-
 popd
 ```
 
@@ -109,9 +117,9 @@ ALTER ROLE airflow SET search_path = airflow, public;
 listen_addresses = '127.0.0.1,172.18.0.1,140.78.90.110"
 
 ssl = on
-ssl_cert_file = '/etc/ssl/postgresql/server-cert.pem'
-ssl_key_file = '/etc/ssl/postgresql/server-key.pem'
-ssl_ca_file = '/etc/ssl/postgresql/ca-cert.pem'
+ssl_cert_file = '/etc/ssl/postgres/server-cert.pem'
+ssl_key_file = '/etc/ssl/postgres/server-key.pem'
+ssl_ca_file = '/etc/ssl/postgres/ca-cert.pem'
 ```
 
 ### Update pg_hba.conf
