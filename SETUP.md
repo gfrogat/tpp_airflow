@@ -14,7 +14,18 @@ mkdir secrets && cd secrets
 ### Self-Signed CA Cert
 
 ```bash
-openssl req -new -nodes -text -out ca.csr -keyout ca-key.pem -subj "/CN=ca.ml.jku.at"
+SUBJECT_COMMON="\
+/C=AT\
+/ST=Upper Austria\
+/L=Linz\
+/O=Institute for Machine Learning\
+/OU=Target Prediction Platform"
+
+SUBJECT_DETAIL="\
+/CN=demosite.ml.jku.at\
+/emailAddress=tpp@ml.jku.at"
+
+openssl req -new -nodes -text -out ca.csr -keyout ca-key.pem -subj "${SUBJECT_COMMON}${SUBJECT_DETAIL}"
 openssl x509 -req -in ca.csr -text -extfile /etc/ssl/openssl.cnf -extensions v3_ca -signkey ca-key.pem -out ca-cert.pem
 
 chmod 600 *.pem
@@ -22,38 +33,49 @@ chmod 600 *.pem
 
 ### Generate Certificates for PostgreSQL / RabbitMQ
 
-Run the snippet once for every service.
+Run the snippet. We create one server and client certificate and use them with PostgresSQL and RabbitMQ.
 
 ```bash
-#SERVICE=postgres
-#SERVICE=rabbitmq
+SUBJECT_DETAIL="\
+/CN=demosite.ml.jku.at\
+/emailAddress=tpp@ml.jku.at"
 
-mkdir -p ${SERVICE} && pushd ${SERVICE}
-openssl req -new -nodes -text -out server.csr -keyout server-key.pem -subj "/CN=demosite.ml.jku.at"
+openssl req -new -nodes -text -out server.csr -keyout server-key.pem -subj "${SUBJECT_COMMON}${SUBJECT_DETAIL}"
 openssl x509 -req -in server.csr -text -CA ../ca-cert.pem -CAkey ../ca-key.pem -CAcreateserial -out server-cert.pem
 
-openssl req -new -nodes -text -out client.csr -keyout client-key.pem -subj "/CN=${SERVICE}-client"
+SUBJECT_DETAIL="\
+/CN=demosite-client.ml.jku.at\
+/emailAddress=tpp@ml.jku.at"
+
+openssl req -new -nodes -text -out client.csr -keyout client-key.pem -subj "${SUBJECT_COMMON}${SUBJECT_DETAIL}"
 openssl x509 -req -in client.csr -text -CA ../ca-cert.pem -CAkey ../ca-key.pem -CAcreateserial -out client-cert.pem
 
 chmod 600 *.csr *.pem
+
+#SERVICE=postgres
+#SERVICE=rabbitmq
 
 mkdir -p /etc/ssl/${SERVICE}
 cp ../ca-cert.pem server-cert.pem server-key.pem /etc/ssl/${SERVICE}
 chmod -R 700 /etc/ssl/${SERVICE}
 chown -R ${SERVICE}:${SERVICE} /etc/ssl/${SERVICE}
-
-popd
 ```
 
 ### Generate Certificate for NGINX
 
-This stop is optional and only applies if you also want to use a self-signed certificate.
+Create a separate certificate in case we want to use real certificate for website.
+
+**This stop is optional and only applies if you also want to use a self-signed certificate.**
 
 ```bash
 SERVICE=nginx
 
+SUBJECT_DETAIL="\
+/CN=demosite.ml.jku.at\
+/emailAddress=tpp@ml.jku.at"
+
 mkdir -p ${SERVICE} && pushd ${SERVICE}
-openssl req -new -nodes -text -out server.csr -keyout server-key.pem -subj "/CN=demosite.ml.jku.at"
+openssl req -new -nodes -text -out server.csr -keyout server-key.pem -subj "${SUBJECT_COMMON}${SUBJECT_DETAIL}"
 openssl x509 -req -in server.csr -text -CA ../ca-cert.pem -CAkey ../ca-key.pem -CAcreateserial -out server-cert.pem
 
 openssl dhparam -out dhparam.pem 4096
@@ -123,6 +145,8 @@ rabbitmqctl set_permissions -p airflow airflow ".*" ".*" ".*"
 
 [Template](https://github.com/rabbitmq/rabbitmq-server/blob/master/docs/rabbitmq.conf.example)
 
+This enables access to the management API via HTTP (port 15672) for Celery Flower monitoring as well via HTTPS (port 15671) on localhost.
+
 ```bash
 # Ubuntu: /etc/rabbitmq/rabbitmq.conf
 # CentOS: /var/lib/rabbitmq/rabbitmq.conf
@@ -168,7 +192,7 @@ bash scripts/init_db.sh
 
 ## Environment Settings
 
-Environment settings for the containers running Airflow are stored in `airflow.env`. Docker-compose additionaly needs additional environment variables which are stored in `.env`.
+Environment settings for the containers running Airflow are stored in `.docker.env`. Docker-compose additionaly needs additional environment variables which are stored in `.env`.
 
 Create a new `.env` file from the `.env.template` template and you are good to go.
 
@@ -178,7 +202,7 @@ bash scripts/build-containers.sh
 
 ### Securing Connections
 
-Generate a custom fernet key via Python snippet and add it as `AIRFLOW__CORE__FERNET_KEY=your_fernet_key` to `airflow.env`.
+Generate a custom fernet key via Python snippet and add it as `AIRFLOW__CORE__FERNET_KEY=your_fernet_key` to `.docker.env`.
 
 ```python
 from cryptography.fernet import Fernet
@@ -190,7 +214,7 @@ For details see: [Airflow Docs](https://airflow.readthedocs.io/en/stable/howto/s
 
 ### Updateing SQLAlchemy connection strings
 
-The file `airflow.env` contains the config for the docker container. If you want to run airflow without Docker (e.g. for depelopment / debugging) you have to update the connections strings.
+The file `.docker.env` contains the config for the docker container. If you want to run airflow without Docker (e.g. for depelopment / debugging) you have to update the connections strings.
 The SQLAlchemy connection string is an [RFC-1738-style string`](https://www.urlencoder.io/learn/). More information can be found in the [Airflow Docs](https://airflow.apache.org/howto/connection/postgres.html) on postgres.
 
 You can generate your string using `urllib` in Python. Just update the paths in the snippet below and run it.
@@ -208,12 +232,12 @@ params = {
 urllib.parse.urlencode(params)
 ```
 
-### Use airflow.env without Docker
+### Use repository config without Docker
 
-You can use `airflow.env` as template for your non-dockerized Airflow setup. You can add the variables to your environment via:
+You can use the files in `tools/env_partials` as templates for your non-dockerized Airflow setup.
 
 ```bash
 set -o allexport
-source airflow.env
+source .docker.env
 set +o allexport
 ```
