@@ -5,6 +5,14 @@ Self-signed suffice for our usecases.
 
 The certificates will be mounted in the Docker containers as [secrets](https://docs.docker.com/engine/swarm/secrets/) via [docker-compose](https://docs.docker.com/compose/compose-file/#secrets).
 
+## Create Docker Subnet
+
+Simply run docker-compose up. It will create the subnet and will fail because the container is missing. We will build the container later.
+
+```bash
+docker-compose up
+```
+
 ## Creating Certificate
 
 ```bash
@@ -12,6 +20,8 @@ mkdir secrets && cd secrets
 ```
 
 ### Self-Signed CA Cert
+
+Note: `openssl.conf` is located under `/etc/ssl` on Ubuntu.
 
 ```bash
 SUBJECT_COMMON="\
@@ -26,7 +36,7 @@ SUBJECT_DETAIL="\
 /emailAddress=tpp@ml.jku.at"
 
 openssl req -new -nodes -text -out ca.csr -keyout ca-key.pem -subj "${SUBJECT_COMMON}${SUBJECT_DETAIL}"
-openssl x509 -req -in ca.csr -text -extfile /etc/ssl/openssl.cnf -extensions v3_ca -signkey ca-key.pem -out ca-cert.pem
+openssl x509 -req -in ca.csr -text -extfile /etc/pki/tls/openssl.cnf -extensions v3_ca -signkey ca-key.pem -out ca-cert.pem
 
 chmod 600 *.csr *.pem
 ```
@@ -63,11 +73,6 @@ sudo mkdir -p /etc/ssl/${SERVICE}
 sudo cp ca-cert.pem server-cert.pem server-key.pem /etc/ssl/${SERVICE}
 sudo chmod -R 700 /etc/ssl/${SERVICE}
 sudo chown -R ${SERVICE}:${SERVICE} /etc/ssl/${SERVICE}
-
-
-# Restart Databases
-sudo systemctl restart postgresql
-sudo systemctl restart rabbitmq-server
 ```
 
 ### Generate Certificate for NGINX
@@ -114,7 +119,7 @@ ALTER ROLE airflow SET search_path = airflow, public;
 ```bash
 # Ubuntu: /etc/postgresql/10/main/postgresql.conf
 # CentOS: /var/lib/pgsql/data/postgresql.conf
-listen_addresses = '127.0.0.1,172.18.0.1,140.78.90.110"
+listen_addresses = '127.0.0.1,172.18.0.1,140.78.90.110'
 
 ssl = on
 ssl_cert_file = '/etc/ssl/postgres/server-cert.pem'
@@ -143,10 +148,10 @@ systemctl restart postgresql
 ### Setup airflow RabbitMQ user
 
 ```bash
-rabbitmqctl add_user airflow tpp_airflow
-rabbitmqctl add_vhost airflow
-rabbitmqctl set_user_tags airflow airflow
-rabbitmqctl set_permissions -p airflow airflow ".*" ".*" ".*"
+sudo rabbitmqctl add_user airflow tpp_airflow
+sudo rabbitmqctl add_vhost airflow
+sudo rabbitmqctl set_user_tags airflow airflow administrator
+sudo rabbitmqctl set_permissions -p airflow airflow ".*" ".*" ".*"
 ```
 
 ### Create rabbitmq.conf
@@ -156,8 +161,7 @@ rabbitmqctl set_permissions -p airflow airflow ".*" ".*" ".*"
 This enables access to the management API via HTTP (port 15672) for Celery Flower monitoring as well via HTTPS (port 15671) on localhost.
 
 ```bash
-# Ubuntu: /etc/rabbitmq/rabbitmq.conf
-# CentOS: /var/lib/rabbitmq/rabbitmq.conf
+# Ubuntu/CentOS: /etc/rabbitmq/rabbitmq.conf
 listeners.ssl.docker = 172.18.0.1:5671
 listeners.ssl.demosite = 140.78.90.110:5671
 
@@ -168,7 +172,8 @@ ssl_options.certfile             = /etc/ssl/rabbitmq/server-cert.pem
 ssl_options.keyfile              = /etc/ssl/rabbitmq/server-key.pem
 
 management.tcp.port = 15672
-management.ssl.port       = 15671
+management.tcp.ip = 172.18.0.1
+management.ssl.port = 15671
 management.ssl.cacertfile = /etc/ssl/rabbitmq/ca-cert.pem
 management.ssl.certfile   = /etc/ssl/rabbitmq/server-cert.pem
 management.ssl.keyfile    = /etc/ssl/rabbitmq/server-key.pem
@@ -177,14 +182,40 @@ management.ssl.keyfile    = /etc/ssl/rabbitmq/server-key.pem
 ### Restart RabbitMQ Server service
 
 ```bash
-systemctl restart rabbitmq-server
+# Make sure Docker subnet already exists (docker-compose up)
+systemctl stop rabbitmq-server
+systemctl start rabbitmq-server
 ```
 
 ## Firewall Setup
 
-```bash
-sudo ufw allow from 172.18.0.0/16 to any port 5672
 ```
+To      Action      From
+--      ------      ----
+5432    ALLOW       140.78.90.0/24  # PostgreSQL vom ML Subnet
+5432    ALLOW       172.18.0.0/16   # PostgreSQL vom Docker Virtual Network
+
+5671    ALLOW       140.78.90.0/24  # RabbitMQ vom ML Subnet
+5671    ALLOW       172.18.0.0/16   # RabbitMQ vom Docker Virtual Network
+15672   ALLOW       172.18.0.0/16   # RabbitMQ (api) vom Docker Virtual Network
+
+80,443  ALLOW       140.78.90.0/24  # NGINX Webserver vom ML Subnet
+```
+
+## Environment Settings
+
+Environment settings for the containers running Airflow are stored in `.docker.env`. Docker-compose additionaly needs additional environment variables which are stored in `.env`.
+You can setup the files running:
+
+```bash
+bash scripts/setup_env_files.sh
+```
+
+```bash
+bash scripts/build-containers.sh
+```
+
+If you encounter permission errors chown the keys to 1000:1000 so that they are accessible in the container.
 
 ## Initialize the database
 
@@ -195,17 +226,8 @@ bash scripts/init_db.sh
 ## Reset the database
 
 ```bash
-bash scripts/init_db.sh
-```
-
-## Environment Settings
-
-Environment settings for the containers running Airflow are stored in `.docker.env`. Docker-compose additionaly needs additional environment variables which are stored in `.env`.
-
-Create a new `.env` file from the `.env.template` template and you are good to go.
-
-```bash
-bash scripts/build-containers.sh
+#Only in emergency
+#bash scripts/reset_db.sh
 ```
 
 ### Securing Connections
