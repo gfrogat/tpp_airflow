@@ -2,7 +2,7 @@
 
 DB_SERVER="igne"
 DB_SERVER_DOCKER_IP="172.18.0.1"
-AIRFLOW_ENV="airflow.env"
+AIRFLOW_ENV=".docker.env"
 AIRFLOW_NETWORK="tpp_airflow_tpp"
 SECRETS_DIR="/run/secrets"
 

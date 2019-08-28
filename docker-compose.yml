@@ -9,7 +9,7 @@ services:
     ports:
       - 8080:8080
     env_file:
-      - airflow.env
+      - .docker.env
     networks:
       - tpp
     extra_hosts:
@@ -29,7 +29,7 @@ services:
     ports:
       - 5555:5555
     env_file:
-      - airflow.env
+      - .docker.env
     networks:
       - tpp
     extra_hosts:
@@ -51,7 +51,7 @@ services:
     volumes:
       - ./dags:${AIRFLOW_HOME}/dags
     env_file:
-      - airflow.env
+      - .docker.env
     networks:
       - tpp
     extra_hosts:
@@ -101,10 +101,10 @@ secrets:
   nginx-cert:
     file: ./secrets/nginx/server-cert.pem
   postgres-client-key:
-    file: ./secrets/postgres/client-key.pem
+    file: ./secrets/client-key.pem
   postgres-client-cert:
-    file: ./secrets/postgres/client-cert.pem
+    file: ./secrets/client-cert.pem
   rabbitmq-client-key:
-    file: ./secrets/rabbitmq/client-key.pem
+    file: ./secrets/client-key.pem
   rabbitmq-client-cert:
-    file: ./secrets/rabbitmq/client-cert.pem
+    file: ./secrets/client-cert.pem

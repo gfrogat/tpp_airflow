@@ -127,3 +127,4 @@ dmypy.json
 
 # Project
 secrets
+.docker.env
