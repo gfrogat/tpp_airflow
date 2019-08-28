@@ -11,9 +11,9 @@ docker run --rm \
     --network "${AIRFLOW_NETWORK}" \
     --add-host "${DB_SERVER}:${DB_SERVER_DOCKER_IP}" \
     -v "$(pwd)"/secrets/ca-cert.pem:${SECRETS_DIR}/ca-cert \
-    -v "$(pwd)"/secrets/postgres/client-key.pem:"${SECRETS_DIR}"/postgres-client-key \
-    -v "$(pwd)"/secrets/postgres/client-cert.pem:"${SECRETS_DIR}"/postgres-client-cert \
-    -v "$(pwd)"/secrets/rabbitmq/client-key.pem:"${SECRETS_DIR}"/rabbitmq-client-key \
-    -v "$(pwd)"/secrets/rabbitmq/client-cert.pem:"${SECRETS_DIR}"/rabbitmq-client-cert \
+    -v "$(pwd)"/secrets/client-key.pem:"${SECRETS_DIR}"/postgres-client-key \
+    -v "$(pwd)"/secrets/client-cert.pem:"${SECRETS_DIR}"/postgres-client-cert \
+    -v "$(pwd)"/secrets/client-key.pem:"${SECRETS_DIR}"/rabbitmq-client-key \
+    -v "$(pwd)"/secrets/client-cert.pem:"${SECRETS_DIR}"/rabbitmq-client-cert \
     -ti ml-jku/airflow \
     airflow initdb
