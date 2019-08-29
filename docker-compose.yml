@@ -9,11 +9,11 @@ services:
     ports:
       - 8080:8080
     env_file:
-      - .docker.env
+      - ${AIRFLOW_ENV}
     networks:
       - tpp
     extra_hosts:
-      - ${DB_SERVER}:${DB_SERVER_DOCKER_IP}
+      - ${DB_HOST}:${DB_HOST_DOCKER_IP}
     secrets:
       - ca-cert
       - postgres-client-key
@@ -29,11 +29,11 @@ services:
     ports:
       - 5555:5555
     env_file:
-      - .docker.env
+      - ${AIRFLOW_ENV}
     networks:
       - tpp
     extra_hosts:
-      - ${DB_SERVER}:${DB_SERVER_DOCKER_IP}
+      - ${DB_HOST}:${DB_HOST_DOCKER_IP}
     secrets:
       - ca-cert
       - postgres-client-key
@@ -51,11 +51,11 @@ services:
     volumes:
       - ./dags:${AIRFLOW_HOME}/dags
     env_file:
-      - .docker.env
+      - ${AIRFLOW_ENV}
     networks:
       - tpp
     extra_hosts:
-      - ${DB_SERVER}:${DB_SERVER_DOCKER_IP}
+      - ${DB_HOST}:${DB_HOST_DOCKER_IP}
     secrets:
       - ca-cert
       - postgres-client-key
@@ -87,6 +87,7 @@ services:
 
 networks:
   tpp:
+    name: tpp
     driver: bridge
     ipam:
       config:
