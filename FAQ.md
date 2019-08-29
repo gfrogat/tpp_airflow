@@ -10,3 +10,7 @@ Restarting both PostgreSQL and RabbitMQ-Server usually resolves the issue.
 sudo systemctl restart postgresql
 sudo systemctl restart rabbitmq-server
 ```
+
+## Mobile Safari (i.e. iOS Browsers) slow loading time
+
+You'll have to import the CA cert into iOS. See this [SO Question](https://stackoverflow.com/questions/35624332/site-on-self-signed-cert-loads-slowly-on-mobile-safari)
