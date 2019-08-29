@@ -3,7 +3,7 @@
 DB_HOST="demosite.ml.jku.at"
 DB_HOST_DOCKER_IP="172.18.0.1"
 AIRFLOW_ENV=".docker.env"
-AIRFLOW_NETWORK="tpp_airflow_tpp"
+AIRFLOW_NETWORK="tpp"
 SECRETS_DIR="/run/secrets"
 
 docker run --rm \
