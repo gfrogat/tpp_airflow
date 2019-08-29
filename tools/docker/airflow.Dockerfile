@@ -25,7 +25,7 @@ ENV LC_ALL en_US.UTF-8
 ENV LC_CTYPE en_US.UTF-8
 ENV LC_MESSAGES en_US.UTF-8
 
-COPY tools/docker/scripts/airflow_entrypoint.sh /entrypoint.sh
+COPY tools/docker/scripts/launch_airflow.sh /launch_airflow.sh
 COPY requirements.txt /requirements.txt
 
 RUN pip3 install --no-cache -U pip setuptools wheel \
@@ -42,4 +42,4 @@ USER airflow
 WORKDIR /home/airflow
 
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/launch_airflow.sh"]
