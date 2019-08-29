@@ -262,12 +262,53 @@ params = {
 urllib.parse.urlencode(params)
 ```
 
-### Use repository config without Docker
+## Running the workers
 
-You can use the files in `tools/env_partials` as templates for your non-dockerized Airflow setup.
+Note: **This section is temporary and will be updated in the future**
+
+The workers will run directly on the machine in a separate conda environment.
+
+Clone the repository on the worker and setup the `.env` files.
 
 ```bash
+bash scripts/setup_env_files.sh
+```
+
+Open the newly generated file `.conda.env` and update the SQLAlchemy connection string for `POSTGRES_SSL_CONFIG` to use your local SSL certificates (see section above for instructions).
+
+The standard solution is to create a folder `.tpp-credentials` in your home directory and copy the certificates there. You can then use this script to create the connection string. **Important:** you have to double-quote the string so that you can successfully load the environment (due to annoying different parsing behaviour of docker-compose and bash).
+
+```python
+# requires > python 3.6
+import urllib.parse
+from pathlib import Path
+
+secrets_folder = Path("~/.tpp-credentials").expanduser()
+
+params = {
+    "sslmode": "verify-ca",
+    "sslrootcert": (secrets_folder / "ca-cert.pem").as_posix(),
+    "sslkey": (secrets_folder / "client-key.pem").as_posix(),
+    "sslcert": (secrets_folder / "client-cert.pem").as_posix(),
+}
+print(params)
+
+print(urllib.parse.urlencode(params))
+```
+
+as well as the `RABBITMQ_SSL_CLIENT_CACERT_*` variables. You can simply copy paste the expanded paths in the params dictionary from the snippet above.
+
+You can source the environment by typing:
+
+````bash
 set -o allexport
-source .docker.env
+source .conda.env
+printenv
 set +o allexport
 ```
+
+```bash
+conda create -n "airflow-worker" python=3.7 -y
+conda activate airflow-worker
+pip install -r requirements.txt
+````

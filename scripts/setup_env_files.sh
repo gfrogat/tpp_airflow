@@ -12,4 +12,7 @@ else
 
     echo "Generating new .docker.env file"
     cat ${ENV_PARTIALS}/main.env ${ENV_PARTIALS}/credentials.env ${ENV_PARTIALS}/server.env > .docker.env
+
+    echo "Generating new .conda.env file"
+    cat ${ENV_PARTIALS}/main.env ${ENV_PARTIALS}/credentials.env ${ENV_PARTIALS}/worker.env > .conda.env
 fi
