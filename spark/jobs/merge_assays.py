@@ -1,59 +1,69 @@
 import argparse
 from pathlib import Path
 
+import pyspark.sql.functions as F
 from pyspark.sql import SparkSession
-from pyspark.sql import functions as F
 
-from tpp.preprocessing import assay_id_schema
 from tpp.preprocessing.chembl import standardize_chembl
 from tpp.preprocessing.pubchem import standardize_pubchem
+from tpp.preprocessing.schemas import (
+    assay_id_schema,
+    compound_id_schema,
+    merged_data_schema,
+)
+from tpp.preprocessing.zinc15 import standardize_zinc15
+from tpp.utils.argcheck import (
+    check_arguments_chembl,
+    check_arguments_pubchem,
+    check_arguments_zinc15,
+)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog="PySpark Dataset Merging", description="Merge datasets"
     )
+
+    parser.add_argument("--merge-chembl", action="store_true", default=False)
     parser.add_argument(
-        "--compounds_chembl",
-        required=True,
+        "--chembl-compounds",
         type=Path,
         metavar="PATH",
         dest="chembl_compounds_path",
         help="Path to folder with ChEMBL compounds",
     )
     parser.add_argument(
-        "--assays_chembl",
-        required=True,
+        "--chembl-assays",
         type=Path,
         metavar="PATH",
         dest="chembl_assays_path",
-        help="Path to folder with ChEMBL assays",
+        help="Path to folder with ChEMBL compounds",
     )
+
+    parser.add_argument("--merge-pubchem", action="store_true", default=False)
     parser.add_argument(
-        "--compounds_pubchem",
-        required=True,
+        "--pubchem-compounds",
         type=Path,
         metavar="PATH",
         dest="pubchem_compounds_path",
         help="Path to folder with PubChem compounds",
     )
     parser.add_argument(
-        "--assays_pubchem",
-        required=True,
+        "--pubchem-assays",
         type=Path,
         metavar="PATH",
         dest="pubchem_assays_path",
         help="Path to folder with PubChem assays",
     )
-    """
+
+    parser.add_argument("--merge-zinc15", action="store_true", default=False)
     parser.add_argument(
-        "--mixed_zinc15",
-        required=True,
+        "--zinc15-data",
         type=Path,
         metavar="PATH",
-        dest="zinc15_data_path",
-        help="Path to folder with ZINC15 data"
+        dest="pubchem_compounds_path",
+        help="Path to folder with ZINC15 (combined) compounds/assays data",
     )
-    """
+
     parser.add_argument(
         "--output",
         required=True,
@@ -62,11 +72,23 @@ if __name__ == "__main__":
         dest="output_path",
         help="Path to store merged datasets in `parquet` format",
     )
-    parser.add_argument(
-        "--merge-all", dest="merge_all", action="store_true", default=False
-    )
 
     args = parser.parse_args()
+
+    if not (args.merge_chembl or args.merge_pubchem or args.merge_zinc15):
+        parser.error(
+            (
+                "Specify at least one dataset `--merge-{chembl, pubchem, zinc15}`"
+                " that should be merged!"
+            )
+        )
+
+    check_arguments_chembl(args)
+    check_arguments_pubchem(args)
+    check_arguments_zinc15(args)
+
+    if args.output_path.exists():
+        raise FileExistsError(f"{args.output_path} already exists!")
 
     try:
         spark = (
@@ -75,20 +97,47 @@ if __name__ == "__main__":
             .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
             .getOrCreate()
         )
-
-        chembl_data, chembl_compound_ids, chembl_assay_ids = standardize_chembl(
-            spark, args.chembl_compounds_path, args.chembl_assays_path
-        )
-        pubchem_data, pubchem_compound_ids, pubchem_assay_ids = standardize_pubchem(
-            spark, args.pubchem_compounds_path, args.pubchem_assays_path
-        )
+        sc = spark.sparkContext
 
         # Export assay_id, global_id mapping
-        merged_assay_ids = chembl_assay_ids
+        merged_assay_ids = sc.emptyRDD().toDF(schema=assay_id_schema)
 
-        if args.merge_all:
+        # Export compound_id, inchikey mapping
+        merged_compound_ids = sc.emptyRDD().toDF(schema=compound_id_schema)
+
+        # Merge Assays
+        merged_data = sc.emptyRDD().toDF(schema=merged_data_schema)
+
+        if args.merge_chembl:
+            chembl_data, chembl_compound_ids, chembl_assay_ids = standardize_chembl(
+                spark, args.chembl_compounds_path, args.chembl_assays_path
+            )
+            merged_data = merged_data.union(chembl_data)
+            merged_compound_ids = merged_compound_ids.union(chembl_compound_ids)
+            merged_assay_ids = merged_assay_ids.union(chembl_assay_ids)
+
+        if args.merge_pubchem:
+            pubchem_data, pubchem_compound_ids, pubchem_assay_ids = standardize_pubchem(
+                spark, args.pubchem_compounds_path, args.pubchem_assays_path
+            )
+            merged_data = merged_data.union(pubchem_data)
+            merged_compound_ids = merged_compound_ids.union(pubchem_compound_ids)
             merged_assays_ids = merged_assay_ids.union(pubchem_assay_ids)
 
+        if args.merge_zinc15:
+            zinc15_data, zinc15_compound_ids, zinc15_assay_ids = standardize_zinc15(
+                spark, args.zinc15_data_path
+            )
+            merged_data = merged_data.union(zinc15_data)
+            merged_compound_ids = merged_compound_ids.union(zinc15_compound_ids)
+            merged_assay_ids = merged_assay_ids.union(zinc15_assay_ids)
+
+        # Write Compound IDs to parquet
+        merged_compound_ids.write.parquet(
+            (args.output_path / "merged_compound_ids.parquet").as_posix()
+        )
+
+        # Numerate Assay_ids and write to parquet
         merged_assay_ids = (
             merged_assay_ids.rdd.zipWithIndex()
             .map(lambda x: (*x[0], x[1]))
@@ -99,21 +148,7 @@ if __name__ == "__main__":
             (args.output_path / "merged_assay_ids.parquet").as_posix()
         )
 
-        # Export compound_id, inchikey mapping
-        merged_compound_ids = chembl_compound_ids
-        if args.merge_all:
-            merged_compound_ids = merged_compound_ids.union(pubchem_compound_ids)
-
-        merged_compound_ids.write.parquet(
-            (args.output_path / "merged_compound_ids.parquet").as_posix()
-        )
-
-        # Merge Assays
-        merged_data = chembl_data
-
-        if args.merge_all:
-            merged_data = merged_data.union(pubchem_data)
-
+        # Merge and flatten assays / compounds pairings
         merged_data = (
             merged_data.alias("md")
             .join(

@@ -1,100 +1,103 @@
+import argparse
 from pathlib import Path
 
 from pyspark.sql import SparkSession
-from pyspark.sql import Window
 from pyspark.sql import functions as F
-from pyspark.sql import types as T
 
-_data_root = Path("/local00/bioinf/tpp")
-
-schema = T.StructType(
-    [
-        T.StructField("key", T.StringType(), False),
-        T.StructField("mean", T.DoubleType(), False),
-        T.StructField("std", T.DoubleType(), False),
-        T.StructField("id", T.IntegerType(), False),
-    ]
-)
+from tpp.descriptors.cleaner import clean_frequency_feature
+from tpp.utils.argcheck import check_input_path, check_output_path, check_path
 
 
-def clean_frequency_feature(df, feature_name, feature_freq=10):
-    features = df.select("inchikey", F.explode(feature_name))
-
-    w = Window.partitionBy("key")
-    features = features \
-        .withColumn("count", F.count("*").over(w)) \
-        .filter(F.col("count") > feature_freq) \
-        .drop("count")
-
-    features = features \
-        .withColumn("mean", F.avg("value").over(w)) \
-        .withColumn("std", F.stddev("value").over(w))
-
-    feature_ids = features \
-        .select("key", "mean", "std") \
-        .dropDuplicates(["key"]) \
-        .rdd \
-        .zipWithIndex() \
-        .map(lambda x: (*x[0], x[1])) \
-        .toDF(schema)
+def clean_feature(df, feature_name: str, output_path: Path):
+    clean_features, feature_ids = clean_frequency_feature(df, feature_name)
 
     feature_ids.write.parquet(
-        (_data_root / "merged_data_mixed_features_{}_ids.parquet".format(feature_name)).as_posix())
+        (
+            output_path
+            / "merged_data_mixed_features_{}_ids.parquet".format(feature_name)
+        ).as_posix()
+    )
 
-    # Normalize feature frequencies
-    # if a feature has stddev 0 --> replace value by 1.0
-    features = features \
-        .withColumn("z_value",
-                    F.when(F.col("std") != 0.0, (F.col("value") - F.col("mean")) / F.col("std")).otherwise(F.lit(1.0))) \
-        .drop("value", "mean", "std") \
-        .select("inchikey", "key", "z_value")
-
-    features = features.alias("f") \
-        .join(feature_ids.alias("fi"), F.col("f.key") == F.col("fi.key"))
-
-    features = features \
-        .select("inchikey", "id", "z_value")
-
-    features = features \
-        .groupBy("inchikey") \
-        .agg(F.map_from_entries(F.sort_array(F.collect_list(F.struct(F.col("id"), F.col("z_value"))))).alias(
-        "{}_clean".format(feature_name)))
-
-    return features
-
-
-def clean_feature(df, feature_name):
-    clean_features = clean_frequency_feature(df, feature_name)
-    df = df.alias("df") \
-        .join(clean_features.alias("clean"), F.col("df.inchikey") == F.col("clean.inchikey")) \
-        .select("df.*", "clean.{}_clean".format(feature_name)) \
+    df = (
+        df.alias("df")
+        .join(
+            clean_features.alias("clean"),
+            F.col("df.inchikey") == F.col("clean.inchikey"),
+        )
+        .select("df.*", "clean.{}_clean".format(feature_name))
         .drop(feature_name)
+    )
 
     return df
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        prog="PySpark Feature Cleaning", description="Clean descriptors"
+    )
+    parser.add_argument(
+        "--input",
+        required=True,
+        type=Path,
+        metavar="PATH",
+        dest="input_path",
+        help=f"Path to folder with input `parquet` file",
+    )
+    parser.add_argument(
+        "--output",
+        required=True,
+        type=Path,
+        metavar="PATH",
+        dest="output_path",
+        help=(
+            "Path where output and computed features should be written to "
+            "in `parquet` format"
+        ),
+    )
+    parser.add_argument(
+        "--temp-files",
+        required=True,
+        type=Path,
+        metavar="PATH",
+        dest="temp_files_path",
+        default="/local00/bioinf/spark/tmp",
+        help=("Path where temporary files are stored " "in `parquet` format"),
+    )
+    args = parser.parse_args()
+
+    check_input_path(args.input_path)
+    check_output_path(args.output_path)
+    check_path(args.temp_files_path)
+
     feature_list = ["ECFC4", "DFS8", "ECFC6", "CATS2D", "SHED"]
 
     try:
-        spark = SparkSession \
-            .builder \
-            .appName("Clean frequency features") \
-            .config("spark.sql.execution.arrow.enabled", "true") \
-            .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer") \
-            .config("spark.executor.memory", "5g") \
+        spark = (
+            SparkSession.builder.appName("Clean frequency features")
+            .config("spark.sql.execution.arrow.enabled", "true")
+            .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+            .config("spark.executor.memory", "5g")
             .getOrCreate()
+        )
 
-        data_mixed = spark.read.parquet((_data_root / "merged_data_mixed.parquet").as_posix())
+        data_mixed = spark.read.parquet(args.input_path.as_posix())
 
         for idx, feature_name in enumerate(feature_list):
-            data_mixed = clean_feature(data_mixed, feature_name)
-            data_mixed.write.parquet((_data_root / "tmp/merged_data_mixed_chkpt{}.parquet".format(idx)).as_posix())
+            data_mixed = clean_feature(data_mixed, feature_name, args.output_path)
+            data_mixed.write.parquet(
+                (
+                    args.temp_files_path / "clean_features_chkpt{}.parquet".format(idx)
+                ).as_posix()
+            )
             data_mixed = spark.read.parquet(
-                (_data_root / "tmp/merged_data_mixed_chkpt{}.parquet".format(idx)).as_posix())
+                (
+                    args.temp_files_path / "clean_features_chkpt{}.parquet".format(idx)
+                ).as_posix()
+            )
 
-        data_mixed.write.parquet((_data_root / "merged_data_mixed_clean.parquet").as_posix())
+        data_mixed.write.parquet(args.output_path.as_posix())
     except Exception:
-    # handle Exception
+        # handle Exception
+        pass
     finally:
         spark.stop()

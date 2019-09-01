@@ -11,7 +11,10 @@ def get_zinc15(spark: SparkSession, data_path: Path):
 
     # Compound IDs
     compound_ids = (
-        data.select("inchikey", "mol_id").dropDuplicates().sort(F.asc("mol_id"))
+        data.select("inchikey", "mol_id")
+        .dropDuplicates()
+        .sort(F.asc("mol_id"))
+        .withColumn("dataset", F.lit("ZINC15"))
     )
 
     # Assay IDs
@@ -21,6 +24,7 @@ def get_zinc15(spark: SparkSession, data_path: Path):
         .sort(F.asc("gene_name"))
         .withColumn("assay_id", F.col("gene_name"))
         .drop("gene_name")
+        .withColumn("dataset", F.lit("ZINC15"))
     )
 
     # Data
