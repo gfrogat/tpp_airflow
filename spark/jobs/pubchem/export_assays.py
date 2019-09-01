@@ -1,4 +1,5 @@
 import argparse
+import logging
 from pathlib import Path
 
 from pyspark.sql import SparkSession
@@ -53,8 +54,7 @@ if __name__ == "__main__":
         activities = files.flatMap(PubChemAssayParser.parse_assay).toDF()
 
         activities.write.parquet(args.output_path.as_posix())
-    except Exception:
-        # handle Exception
-        pass
+    except Exception as e:
+        logging.exception(e)
     finally:
         spark.stop()

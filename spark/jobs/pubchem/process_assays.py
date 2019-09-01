@@ -1,9 +1,10 @@
 import argparse
+import logging
 from pathlib import Path
 
 from pyspark.sql import SparkSession, Window
-from pyspark.sql import functions as F
-from pyspark.sql import types as T
+import pyspark.sql.functions as F
+import pyspark.sql.types as T
 
 from tpp.utils.argcheck import check_input_path, check_output_path
 
@@ -26,7 +27,7 @@ if __name__ == "__main__":
         type=Path,
         metavar="PATH",
         dest="input_path",
-        help=f"Path to PubChem folder (FTP schema)",
+        help=f"Path to folder with PubChem assays in `parquet' format",
     )
     parser.add_argument(
         "--output",
@@ -94,8 +95,7 @@ if __name__ == "__main__":
         )
 
         processed_assays.write.parquet(args.output_path.as_posix())
-    except Exception:
-        # handle Exception
-        pass
+    except Exception as e:
+        logging.exception(e)
     finally:
         spark.stop()

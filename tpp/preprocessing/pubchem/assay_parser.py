@@ -20,11 +20,13 @@ class PubChemAssayParser(parser.AssayParser):
         return int(string)
 
     @staticmethod
-    def _read_csvgz(filepath: Path) -> List[Row]:
+    def _read_csvgz(csvgz, zip_content: zipfile.ZipInfo) -> List[Row]:
         res = []
 
-        aid = PubChemAssayParser._cast_int(filepath.stem)
-        with gzip.open(filepath, mode="rt") as csvfile:
+        aid = PubChemAssayParser._cast_int(
+            Path(zip_content.filename).name.split(".")[0]
+        )
+        with gzip.open(csvgz, mode="rt") as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 if "RESULT_" not in row["PUBCHEM_RESULT_TAG"]:
@@ -51,7 +53,7 @@ class PubChemAssayParser(parser.AssayParser):
             zip_info = zip_file.infolist()
             for zip_content in zip_info:
                 with zip_file.open(zip_content) as csvgz:
-                    contents = PubChemAssayParser._read_csvgz(csvgz)
+                    contents = PubChemAssayParser._read_csvgz(csvgz, zip_content)
                     if len(contents) > 0:
                         collection += contents
 
