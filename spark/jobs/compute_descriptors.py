@@ -1,4 +1,5 @@
 import argparse
+import logging
 from pathlib import Path
 
 import pyspark.sql.functions as F
@@ -75,8 +76,7 @@ if __name__ == "__main__":
 
         df.write.parquet(args.output_path.as_posix())
 
-    except Exception:
-        # handle exception
-        pass
+    except Exception as e:
+        logging.exception(e)
     finally:
         spark.stop()

@@ -1,4 +1,5 @@
 import argparse
+import logging
 from pathlib import Path
 
 import pyspark.sql.functions as F
@@ -170,8 +171,7 @@ if __name__ == "__main__":
         flattened_data.write.parquet(
             (args.output_path / "merged_data.parquet").as_posix()
         )
-    except Exception:
-        # handle Exception
-        pass
+    except Exception as e:
+        logging.exception(e)
     finally:
         spark.stop()

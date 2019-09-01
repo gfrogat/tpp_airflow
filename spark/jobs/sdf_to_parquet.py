@@ -1,4 +1,5 @@
 import argparse
+import logging
 from pathlib import Path
 
 from pyspark.sql import SparkSession
@@ -57,8 +58,7 @@ if __name__ == "__main__":
         sdf_parquet = sdf_files.flatMap(sdf_parser.parse_sdf).toDF(schema=schema)
 
         sdf_parquet.write.parquet(args.output_path.as_posix())
-    except Exception:
-        # handle exception
-        pass
+    except Exception as e:
+        logging.exception(e)
     finally:
         spark.stop()
