@@ -4,6 +4,7 @@ from pathlib import Path
 from pyspark.sql import SparkSession
 
 from tpp.preprocessing import Dataset, get_sdf_parser
+from tpp.utils.argcheck import check_input_path, check_output_path
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -14,7 +15,7 @@ if __name__ == "__main__":
         required=True,
         type=Path,
         metavar="PATH",
-        dest="sdf_path",
+        dest="input_path",
         help=f"Path to folder with SDF files",
     )
     parser.add_argument(
@@ -22,7 +23,7 @@ if __name__ == "__main__":
         required=True,
         type=Path,
         metavar="PATH",
-        dest="parquet_path",
+        dest="output_path",
         help="Path where output should be written to in `parquet` format",
     )
     parser.add_argument(
@@ -34,16 +35,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if not args.sdf_path.exists():
-        raise FileNotFoundError(f"Path {args.sdf_path} does not exist")
-
-    if not args.parquet_path.parent.exists():
-        raise FileNotFoundError(
-            f"Parent folder {args.parquet_path.parent} does not exist!"
-        )
-
-    if args.parquet_path.exists():
-        raise FileExistsError(f"{args.parquet_path} already exists!")
+    check_input_path(args.input_path)
+    check_output_path(args.output_path)
 
     sdf_parser = get_sdf_parser(args.dataset)
     schema = sdf_parser.get_schema()
@@ -58,12 +51,12 @@ if __name__ == "__main__":
 
         sc = spark.sparkContext
 
-        sdf_files = list(args.sdf_path.glob("*.sdf"))
+        sdf_files = list(args.input_path.glob("*.sdf"))
         sdf_files = sc.parallelize(sdf_files).repartition(args.num_partitions)
 
         sdf_parquet = sdf_files.flatMap(sdf_parser.parse_sdf).toDF(schema=schema)
 
-        sdf_parquet.write.parquet(args.parquet_path.as_posix())
+        sdf_parquet.write.parquet(args.output_path.as_posix())
     except Exception:
         # handle exception
         pass

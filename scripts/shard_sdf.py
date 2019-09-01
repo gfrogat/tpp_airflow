@@ -9,6 +9,8 @@ from typing import Tuple
 from rdkit import Chem
 from tqdm import tqdm
 
+from tpp.utils.argcheck import check_input_path, check_parent_folder
+
 logging.basicConfig(level=logging.INFO)
 
 NUM_SHARDS = 100
@@ -118,11 +120,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if not args.sdf_path.exists():
-        raise FileNotFoundError("Input file does not exist!")
-
-    if not args.shards_path.parent.exists():
-        raise FileNotFoundError("Parent folder of shards folder does not exist")
+    check_input_path(args.sdf_path)
+    check_parent_folder(args.shards_path)
 
     if args.num_proc > cpu_count():
         raise OSError("Number of processes exceeds number of available CPU cores!")

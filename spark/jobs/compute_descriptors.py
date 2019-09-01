@@ -5,6 +5,7 @@ import pyspark.sql.functions as F
 from pyspark.sql import SparkSession
 
 from tpp.descriptors import FeatureType, get_feature_calculator
+from tpp.utils.argcheck import check_input_path, check_output_path
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -43,16 +44,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if not args.input_path.exists():
-        raise FileNotFoundError(f"Path {args.input_path} does not exist")
-
-    if not args.output_path.parent.exists():
-        raise FileNotFoundError(
-            f"Parent folder {args.output_path.parent} does not exist!"
-        )
-
-    if args.output_path.exists():
-        raise FileExistsError(f"{args.output_path} already exists!")
+    check_input_path(args.input_path)
+    check_output_path(args.output_path)
 
     calculator = get_feature_calculator(args.feature_type)
     schema = calculator.get_schema()
@@ -83,6 +76,7 @@ if __name__ == "__main__":
         df.write.parquet(args.output_path.as_posix())
 
     except Exception:
+        # handle exception
         pass
     finally:
         spark.stop()

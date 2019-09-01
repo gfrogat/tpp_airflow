@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from tpp.utils.argcheck import check_input_path, check_output_path
+
 logging.basicConfig(level=logging.INFO)
 
 
@@ -97,7 +99,7 @@ if __name__ == "__main__":
         required=True,
         type=Path,
         metavar="PATH",
-        dest="db_path",
+        dest="input_path",
         help=f"Path to ChEMBL SQLite database",
     )
     parser.add_argument(
@@ -105,7 +107,7 @@ if __name__ == "__main__":
         type=Path,
         required=True,
         metavar="PATH",
-        dest="parquet_path",
+        dest="output_path",
         help="Path where output should be written to in `parquet` format",
     )
     parser.add_argument(
@@ -118,15 +120,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if not args.db_path.exists():
-        raise FileNotFoundError(f"Path {args.db_path} does not exist")
+    check_input_path(args.input_path)
+    check_output_path(args.output_path)
 
-    if not args.parquet_path.parent.exists():
-        raise FileNotFoundError(
-            f"Parent folder {args.parquet_path.parent} does not exist!"
-        )
-
-    if args.parquet_path.exists():
-        raise FileExistsError(f"{args.parquet_path} already exists!")
-
-    export_chembl_sqlite(args.db_path, args.parquet_path, args.export_type)
+    export_chembl_sqlite(args.input_path, args.output_path, args.export_type)
