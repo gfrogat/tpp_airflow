@@ -1,11 +1,15 @@
 import argparse
+import logging
 from pathlib import Path
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 from pyspark.sql import SparkSession
 
-from tpp.preprocessing.chembl import clean_activity_labels, generate_activity_labels
+from tpp.preprocessing.chembl.activity_labels import (
+    clean_activity_labels,
+    generate_activity_labels,
+)
 from tpp.utils.argcheck import check_input_path, check_output_path
 
 if __name__ == "__main__":
@@ -19,7 +23,7 @@ if __name__ == "__main__":
         type=Path,
         metavar="PATH",
         dest="input_path",
-        help=f"Path to PubChem folder (FTP schema)",
+        help=f"Path to folder with ChEMBL Database in `parquet` format)",
     )
     parser.add_argument(
         "--output",
@@ -52,7 +56,7 @@ if __name__ == "__main__":
         )
 
         df = spark.read.parquet(args.input_path.as_posix()).repartition(
-            parser.num_partitions
+            args.num_partitions
         )
 
         df_processed = df.withColumn(
@@ -70,8 +74,7 @@ if __name__ == "__main__":
         )
 
         df_cleaned.write.parquet(args.output_path.as_posix())
-    except Exception:
-        # handle exception
-        pass
+    except Exception as e:
+        logging.exception(e)
     finally:
         spark.stop()
