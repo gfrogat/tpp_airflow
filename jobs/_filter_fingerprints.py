@@ -4,6 +4,7 @@ import pyspark.sql.functions as F
 import pyspark.sql.types as T
 from pyspark.sql import SparkSession
 
+# covered by cleaner
 spark = (
     SparkSession.builder.appName("Process ChEMBL25 Assays")
     .config("spark.sql.execution.arrow.enabled", "true")
@@ -13,10 +14,10 @@ spark = (
 _data_root = Path("/local00/bioinf/tpp")
 
 df = spark.read.parquet(
-    (_data_root / "chembl_25/chembl_25_semisparse.parquet/").as_posix()
+    (_data_root / "chembl_25/merged_data_mixed.parquet/").as_posix()
 )
 
-df_test = df.select("inchikey", F.explode("ECFP"))
+df_test = df.select("inchikey", F.explode("ECFC4"))
 
 
 ecfp_ids_schema = T.StructType(
