@@ -1,12 +1,37 @@
+import subprocess
+from pathlib import Path
+
 from setuptools import find_packages, setup
+
+cwd = Path("").absolute()
+
+version = "0.1.0"
+sha = "Unknown"
+
+try:
+    sha = (
+        subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=cwd)
+        .decode("ascii")
+        .strip()
+    )
+except Exception:
+    pass
+
+version_path = cwd / "tpp" / "version.py"
+
+with open(version_path, "w") as f:
+    f.write(f'__version__ = "{version}"\n')
+    f.write(f'git_version = "{sha}"')
+
 
 setup(
     # Metadata
     name="tpp",
+    version=version,
     author="Peter Ruch",
-    author_email="gfrogat@gmail.com",
+    author_email="tpp@ml.jku.at",
     license="MIT",
-    description="Target Prediction Pipeline",
+    description="Target Prediction Platform",
     # Package info
     packages=find_packages(),
     zip_safe=False,
