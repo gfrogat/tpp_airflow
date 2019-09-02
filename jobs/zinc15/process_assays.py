@@ -1,4 +1,5 @@
 import argparse
+import logging
 from pathlib import Path
 
 from pyspark.sql import SparkSession, Window
@@ -44,33 +45,17 @@ if __name__ == "__main__":
         df = spark.read.parquet(args.input_path.as_posix())
         df = df.dropna()
 
-        """
-        # needed?
-        w = Window.partitionBy("zinc_id")
-
+        # Remove non-unique inchikey per mol_id collisions
+        w = Window.partitionBy("mol_id")
         df = df.withColumn(
-            "count",
-            F.count("smiles").over(w)
-        ).withColumn(
-            "rank",
-            F.row_number().over(w.orderBy(F.desc("count")))
-        ).filter(F.col("rank") == 1)
-        """
+            "num_inchikey", F.size(F.collect_set("inchikey").over(w))
+        ).filter(F.col("num_inchikey") == 1)
 
         triples = df.groupby(["mol_id", "gene_name"]).agg(
             F.mean("affinity").alias("avg_affinity"),
             F.collect_set("mol_file").alias("mol_file"),
             F.collect_set("inchikey").alias("inchikey"),
         )
-
-        target_size = df.select("gene_name").distinct().count()
-        compound_size = df.select("mol_id").distinct().count()
-
-        # necessary?
-        """
-        assert df.select("gene_name").distinct().intersect(triples.select("gene_name").distinct()).count() == target_size
-        assert df.select("mol_id").distinct().intersect(triples.select("mol_id").distinct()).count() == compound_size
-        """
 
         triples = triples.withColumn(
             "activity", F.when(F.col("avg_affinity") > 8, 1).otherwise(-1)
@@ -89,13 +74,11 @@ if __name__ == "__main__":
                 & (F.col("inactives") > 10)
                 & (F.col("actives") + F.col("inactives") > 25)
             )
-            .select(["mol_id", "inchikey", "mol_file", "gene_name", "activity"])
+            .select("mol_id", "inchikey", "mol_file", "gene_name", "activity")
         )
 
         triples.write.parquet(args.output_path.as_posix())
-
-    except Exception:
-        # handle Exception
-        pass
+    except Exception as e:
+        logging.exception(e)
     finally:
         spark.stop()
