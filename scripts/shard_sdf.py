@@ -64,24 +64,23 @@ def shard_sdf(sdf_path: Path, shards_path: Path, num_shards: int, num_proc: int)
             it = pool.imap_unordered(
                 partial(
                     export_sdf_shard,
-                    filename=sdf_path,
+                    sdf_path=sdf_path,
                     shard_dir=shards_path,
                     width=len(str(num_shards)),
                 ),
                 shard_meta,
                 chunksize=1,
             )
-    try:
-        while True:
             try:
-                it.next(timeout=300)
-            except TimeoutError as error:
-                logging.error(error, exc_info=True)
+                while True:
+                    try:
+                        it.next(timeout=300)
+                    except TimeoutError as error:
+                        logging.error(error, exc_info=True)
 
-            progress_bar.update(1)
-    except StopIteration:
-        pass
-    logging.info(f"Finished sharding of `{sdf_path}`")
+                    progress_bar.update(1)
+            except StopIteration:
+                logging.info(f"Finished sharding of `{sdf_path}`")
 
 
 if __name__ == "__main__":

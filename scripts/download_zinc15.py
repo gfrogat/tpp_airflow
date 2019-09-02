@@ -7,6 +7,8 @@ import pandas as pd
 import requests
 from tqdm import tqdm
 
+from tpp.utils.argcheck import check_output_path
+
 ZINC15_URL = (
     "https://zinc15.docking.org/activities.sdf"
     ":zinc_id+gene_name+organism+num_observations+affinity+smiles"
@@ -68,11 +70,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output",
         type=str,
-        dest="sdf_path",
+        dest="output_path",
         required=True,
         help="Path to store downloaded SDF files",
     )
 
     args = parser.parse_args()
 
-    download_zinc15(sdf_path=args.sdf_path)
+    check_output_path(args.output_path)
+
+    download_zinc15(sdf_path=args.output_path)
