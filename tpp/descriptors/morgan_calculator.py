@@ -18,14 +18,14 @@ class MorganCalculator(object):
     def calculate_descriptors(molfile):
         mol = Chem.MolFromMolBlock(molfile)
 
-        static_features = None
+        morgan_fp = None
 
         if mol is not None:
             try:
-                static_features = MorganFingerprinter.calculate(mol)
+                morgan_fp = MorganFingerprinter.calculate(mol)
             except Exception:
                 MorganCalculator.logger.exception("Error computing descriptors")
-                static_features = None
+                morgan_fp = None
 
-        row = Row(static_features=static_features)
+        row = Row(morgan_fp=morgan_fp)
         return row
