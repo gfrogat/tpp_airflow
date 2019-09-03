@@ -14,8 +14,8 @@ from tpp.utils.argcheck import check_input_path, check_output_path
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        prog="PySpark ChEMBL Assay Processing",
-        description="Process ChEMBL assay data from SQLite dump to `parquet` format",
+        prog="ChEMBL Assay Processing",
+        description="Process ChEMBL SQLite dump assay data",
     )
     parser.add_argument(
         "--input",
@@ -31,7 +31,7 @@ if __name__ == "__main__":
         type=Path,
         metavar="PATH",
         dest="output_path",
-        help="Path where output should be written to in `parquet` format",
+        help="Path where processed assays should be written to in `parquet` format",
     )
     parser.add_argument(
         "--num-partitions", type=int, dest="num_partitions", default=100

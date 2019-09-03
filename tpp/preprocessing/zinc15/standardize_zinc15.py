@@ -4,7 +4,6 @@ from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
 
 
-# TODO verify with preprocessed ZINC15 data
 def get_zinc15(spark: SparkSession, data_path: Path):
     # ZINC15 - load data
     data = spark.read.parquet(data_path.as_posix())

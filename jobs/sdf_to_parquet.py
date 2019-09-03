@@ -9,7 +9,7 @@ from tpp.utils.argcheck import check_input_path, check_output_path
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        prog="PySpark SDF Export", description="Export SDF to `parquet` format"
+        prog="SDF Export", description="Export SDF into `parquet` format"
     )
     parser.add_argument(
         "--input",

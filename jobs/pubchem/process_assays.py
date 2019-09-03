@@ -18,7 +18,7 @@ pubchem_assay_schema = T.StructType(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        prog="PySpark PubChem Assay Processing",
+        prog="PubChem Assay Processing",
         description="Process PubChem BioAssay data in `parquet` format",
     )
     parser.add_argument(

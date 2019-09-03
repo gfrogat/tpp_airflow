@@ -10,8 +10,8 @@ from tpp.utils.argcheck import check_input_path, check_output_path
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        prog="PySpark Feature Computation",
-        description="Compute descriptors for `parquet` data.",
+        prog="Descriptor Computatian",
+        description="Compute descriptors for flattened data in `parquet` format.",
     )
     parser.add_argument(
         "--input",

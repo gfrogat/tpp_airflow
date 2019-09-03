@@ -12,7 +12,7 @@ _pubchem_assay_path = Path("ftp.ncbi.nlm.nih.gov/pubchem/Bioassay/CSV/Data/")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        prog="PySpark PubChem Assay Export",
+        prog="PubChem Assay Export",
         description="Export PubChem BioAssay data from `csv` to `parquet` format",
     )
     parser.add_argument(

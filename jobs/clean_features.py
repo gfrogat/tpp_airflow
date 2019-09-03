@@ -34,7 +34,11 @@ def clean_feature(df, feature_name: str, output_path: Path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        prog="PySpark Feature Cleaning", description="Clean descriptors"
+        prog="Frequency Fingerprint Cleaning",
+        description=(
+            "Clean Frequency Fingerprint features. Replace feature smart "
+            "strings with numeric id and remove infrequent features."
+        ),
     )
     parser.add_argument(
         "--input",

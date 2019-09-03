@@ -9,8 +9,8 @@ from tpp.utils.argcheck import check_input_path, check_output_path
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        prog="PySpark PubChem Assay Processing",
-        description="Process PubChem BioAssay data in `parquet` format",
+        prog="ZINC15 Data Processing",
+        description="Process ZINC15 data in `parquet` format",
     )
     parser.add_argument(
         "--input",

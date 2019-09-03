@@ -21,7 +21,11 @@ from tpp.utils.argcheck import (
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        prog="PySpark Dataset Merging", description="Merge datasets"
+        prog="Dataset Merging",
+        description=(
+            "Merge multiple processed datasets and output flattened dataset "
+            "for feature computation in `parquet` format."
+        ),
     )
 
     parser.add_argument("--merge-chembl", action="store_true", default=False)
