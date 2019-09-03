@@ -25,7 +25,7 @@ def export_sdf_shard(
 ):
     shard_id, item_range = shard_meta
 
-    filename = shards_path / f"{sdf_path.stem}_shard{shard_id:0{width}d}"
+    filename = shards_path / f"{sdf_path.stem}_shard{shard_id:0{width}d}.sdf"
 
     logging.info(f"Exporting shard `{filename}`")
     sdf_reader = Chem.SDMolSupplier(sdf_path.as_posix())

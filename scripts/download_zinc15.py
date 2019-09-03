@@ -20,7 +20,7 @@ ZINC15_ITEMS_PER_PAGE = 100
 def get_page_as_sdf(page: int, sdf_path: Path, url: str = ZINC15_URL):
     r = requests.get(url, params={"page": page})
     if r.status_code == requests.codes.ok:
-        page_path = sdf_path / f"page{page}"
+        page_path = sdf_path / f"page{page}.sdf"
         with open(page_path.as_posix(), "wb") as sdf:
             sdf.write(r.content)
 
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--output",
-        type=str,
+        type=Path,
         dest="output_path",
         required=True,
         help="Path to store downloaded SDF files",
