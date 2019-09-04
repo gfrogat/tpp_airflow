@@ -18,6 +18,7 @@ from tpp.utils.argcheck import (
     check_arguments_chembl,
     check_arguments_pubchem,
     check_arguments_zinc15,
+    check_path,
 )
 
 if __name__ == "__main__":
@@ -93,8 +94,7 @@ if __name__ == "__main__":
     check_arguments_pubchem(args)
     check_arguments_zinc15(args)
 
-    if args.output_dir_path.exists():
-        raise FileExistsError(f"{args.output_dir_path} already exists!")
+    check_path(args.output_dir_path)
 
     try:
         spark = (
@@ -172,8 +172,8 @@ if __name__ == "__main__":
             F.map_from_entries(
                 F.sort_array(
                     F.collect_list(F.struct(F.col("global_id"), F.col("activity")))
-                ).alias("labels")
-            ),
+                )
+            ).alias("labels"),
         )
 
         flattened_data.write.parquet(
