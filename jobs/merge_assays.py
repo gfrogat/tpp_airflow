@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 
 import pyspark.sql.functions as F
+
 from pyspark.sql import SparkSession
 
 from tpp.preprocessing.chembl.standardize_chembl import standardize_chembl
@@ -106,6 +107,8 @@ if __name__ == "__main__":
 
         # Export assay_id, global_id mapping
         merged_assay_ids = sc.emptyRDD().toDF(schema=assay_id_schema)
+        # Drop global_id because we will add it later after
+        merged_assay_ids = merged_assay_ids.drop("global_id")
 
         # Export compound_id, inchikey mapping
         merged_compound_ids = sc.emptyRDD().toDF(schema=compound_id_schema)
@@ -127,12 +130,13 @@ if __name__ == "__main__":
             )
             merged_data = merged_data.union(pubchem_data)
             merged_compound_ids = merged_compound_ids.union(pubchem_compound_ids)
-            merged_assays_ids = merged_assay_ids.union(pubchem_assay_ids)
+            merged_assay_ids = merged_assay_ids.union(pubchem_assay_ids)
 
         if args.merge_zinc15:
             zinc15_data, zinc15_compound_ids, zinc15_assay_ids = standardize_zinc15(
                 spark, args.zinc15_data_path
             )
+
             merged_data = merged_data.union(zinc15_data)
             merged_compound_ids = merged_compound_ids.union(zinc15_compound_ids)
             merged_assay_ids = merged_assay_ids.union(zinc15_assay_ids)
