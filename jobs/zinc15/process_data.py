@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
     try:
         spark = (
-            SparkSession.builder.appName("Process ZINC15 Assays")
+            SparkSession.builder.appName(parser.prog)
             .config("spark.sql.execution.arrow.enabled", "true")
             .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
             .getOrCreate()

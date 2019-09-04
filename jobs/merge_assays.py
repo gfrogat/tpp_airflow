@@ -97,7 +97,7 @@ if __name__ == "__main__":
 
     try:
         spark = (
-            SparkSession.builder.appName("Merge ChEMBL + PubChem")
+            SparkSession.builder.appName(parser.prog)
             .config("spark.sql.execution.arrow.enabled", "true")
             .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
             .getOrCreate()
