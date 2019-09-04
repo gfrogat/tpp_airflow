@@ -76,7 +76,13 @@ if __name__ == "__main__":
                 & (F.col("inactives") > 10)
                 & (F.col("actives") + F.col("inactives") > 25)
             )
-            .select("mol_id", "inchikey", "mol_file", "gene_name", "activity")
+            .select(
+                F.col("inchikey")[0],  # inchikey are unique
+                "assay_id",
+                F.col("mol_file")[0],  # use one of molfile (have same inchikey)
+                "activity",
+                "dataset",
+            )
         )
 
         triples.write.parquet(args.output_path.as_posix())
