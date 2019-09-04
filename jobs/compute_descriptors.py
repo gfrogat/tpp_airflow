@@ -10,7 +10,7 @@ from tpp.utils.argcheck import check_input_path, check_output_path
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        prog="Descriptor Computatian",
+        prog="Descriptor Computation",
         description="Compute descriptors for flattened data in `parquet` format.",
     )
     parser.add_argument(
