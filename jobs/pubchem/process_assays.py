@@ -37,6 +37,9 @@ if __name__ == "__main__":
         dest="output_path",
         help="Path where output should be written to in `parquet` format",
     )
+    parser.add_argument(
+        "--num-partitions", type=int, dest="num_partitions", default=200
+    )
 
     args = parser.parse_args()
 
@@ -51,7 +54,9 @@ if __name__ == "__main__":
             .getOrCreate()
         )
 
-        assays = spark.read.parquet(args.input_path.as_posix()).dropna()
+        assays = spark.read.parquet(args.input_path.as_posix())
+        assays = assays.repartition(args.num_partitions)
+        assays = assays.dropna()
 
         # remove assays with few measurements
         w = Window.partitionBy("aid")

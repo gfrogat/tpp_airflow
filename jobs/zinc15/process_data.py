@@ -28,6 +28,7 @@ if __name__ == "__main__":
         dest="output_path",
         help="Path where output should be written to in `parquet` format",
     )
+    parser.add_argument("--num-partitions", type=int, dest="num_partitions", default=50)
 
     args = parser.parse_args()
 
@@ -42,16 +43,17 @@ if __name__ == "__main__":
             .getOrCreate()
         )
 
-        df = spark.read.parquet(args.input_path.as_posix())
-        df = df.dropna()
+        data = spark.read.parquet(args.input_path.as_posix())
+        data = data.repartition(args.num_partitions)
+        data = data.dropna()
 
         # Remove non-unique inchikey per mol_id collisions
         w = Window.partitionBy("mol_id")
-        df = df.withColumn(
+        data = data.withColumn(
             "num_inchikey", F.size(F.collect_set("inchikey").over(w))
         ).filter(F.col("num_inchikey") == 1)
 
-        triples = df.groupby(["mol_id", "gene_name"]).agg(
+        triples = data.groupby(["mol_id", "gene_name"]).agg(
             F.mean("affinity").alias("avg_affinity"),
             F.collect_set("mol_file").alias("mol_file"),
             F.collect_set("inchikey").alias("inchikey"),

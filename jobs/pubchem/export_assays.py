@@ -31,6 +31,9 @@ if __name__ == "__main__":
         dest="output_path",
         help="Path where output should be written to in `parquet` format",
     )
+    parser.add_argument(
+        "--num-partitions", type=int, dest="num_partitions", default=200
+    )
 
     args = parser.parse_args()
 
@@ -49,7 +52,7 @@ if __name__ == "__main__":
         sc = spark.sparkContext
 
         files = list((args.pubchem_root_path / _pubchem_assay_path).glob("*.zip"))
-        files = sc.parallelize(files)
+        files = sc.parallelize(files).repartition(args.num_partitions)
 
         activities = files.flatMap(PubChemAssayParser.parse_assay).toDF()
 
