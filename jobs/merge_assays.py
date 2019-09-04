@@ -71,11 +71,11 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--output",
+        "--output-dir",
         required=True,
         type=Path,
         metavar="PATH",
-        dest="output_path",
+        dest="output_dir_path",
         help="Path to store merged datasets in `parquet` format",
     )
 
@@ -93,8 +93,8 @@ if __name__ == "__main__":
     check_arguments_pubchem(args)
     check_arguments_zinc15(args)
 
-    if args.output_path.exists():
-        raise FileExistsError(f"{args.output_path} already exists!")
+    if args.output_dir_path.exists():
+        raise FileExistsError(f"{args.output_dir_path} already exists!")
 
     try:
         spark = (
@@ -143,7 +143,7 @@ if __name__ == "__main__":
 
         # Write Compound IDs to parquet
         merged_compound_ids.write.parquet(
-            (args.output_path / "merged_compound_ids.parquet").as_posix()
+            (args.output_dir_path / "merged_compound_ids.parquet").as_posix()
         )
 
         # Numerate Assay_ids and write to parquet
@@ -154,7 +154,7 @@ if __name__ == "__main__":
         )
 
         merged_assay_ids.write.parquet(
-            (args.output_path / "merged_assay_ids.parquet").as_posix()
+            (args.output_dir_path / "merged_assay_ids.parquet").as_posix()
         )
 
         # Merge and flatten assays / compounds pairings
@@ -177,7 +177,7 @@ if __name__ == "__main__":
         )
 
         flattened_data.write.parquet(
-            (args.output_path / "merged_data.parquet").as_posix()
+            (args.output_dir_path / "merged_data.parquet").as_posix()
         )
     except Exception as e:
         logging.exception(e)

@@ -78,8 +78,10 @@ if __name__ == "__main__":
             )
             .select(
                 "mol_id",
-                F.col("inchikey")[0],  # inchikey are unique
-                F.col("mol_file")[0],  # use one of molfile (have same inchikey)
+                F.col("inchikey")[0].alias("inchikey"),  # inchikey are unique
+                F.col("mol_file")[0].alias(
+                    "inchikey"
+                ),  # use one of molfile (have same inchikey)
                 "gene_name",
                 "activity",
             )
