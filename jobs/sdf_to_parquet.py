@@ -7,6 +7,8 @@ from pyspark.sql import SparkSession
 from tpp.preprocessing import Dataset, get_sdf_parser
 from tpp.utils.argcheck import check_input_path, check_output_path
 
+_pubchem_compound_path = Path("ftp.ncbi.nlm.nih.gov/pubchem/Compound/CURRENT-Full/SDF/")
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog="SDF Export", description="Export SDF into `parquet` format"
@@ -42,6 +44,13 @@ if __name__ == "__main__":
     sdf_parser = get_sdf_parser(args.dataset)
     schema = sdf_parser.get_schema()
 
+    input_path = args.input_path
+    glob_pattern = "*.sdf"
+
+    if args.dataset == Dataset.PUBCHEM:
+        input_path = args.input_path / _pubchem_compound_path
+        glob_pattern = "*.sdf.gz"
+
     try:
         spark = (
             SparkSession.builder.appName("Process ChEMBL25 Assays")
@@ -52,7 +61,7 @@ if __name__ == "__main__":
 
         sc = spark.sparkContext
 
-        sdf_files = list(args.input_path.glob("*.sdf"))
+        sdf_files = list(input_path.glob(glob_pattern))
         sdf_files = sc.parallelize(sdf_files).repartition(args.num_partitions)
 
         sdf_parquet = sdf_files.flatMap(sdf_parser.parse_sdf).toDF(schema=schema)
