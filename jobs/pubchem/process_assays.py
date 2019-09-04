@@ -8,14 +8,6 @@ import pyspark.sql.types as T
 
 from tpp.utils.argcheck import check_input_path, check_output_path
 
-pubchem_assay_schema = T.StructType(
-    [
-        T.StructField("aid", T.IntegerType(), False),
-        T.StructField("cid", T.IntegerType(), False),
-        T.StructField("activity_outcome", T.IntegerType(), False),
-    ]
-)
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog="PubChem Assay Processing",
@@ -63,15 +55,15 @@ if __name__ == "__main__":
 
         # Filter out assays that don't appear at least 25 times
         assays = (
-            assays.select("aid", "cid", "activity_outcome")
+            assays.select("aid", "cid", "activity")
             .withColumn("count", F.count("*").over(w))
             .filter(F.col("count") > 25)
             .drop("count")
         )
 
         assays = assays.withColumn(
-            "affinity", F.when(F.col("activity_outcome") == 3, 1.0).otherwise(0.0)
-        ).drop("activity_outcome")
+            "affinity", F.when(F.col("activity") == 3, 1.0).otherwise(0.0)
+        ).drop("activity")
 
         assays = (
             assays.groupby(["aid", "cid"])

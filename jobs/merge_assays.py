@@ -5,14 +5,14 @@ from pathlib import Path
 import pyspark.sql.functions as F
 from pyspark.sql import SparkSession
 
-from tpp.preprocessing.chembl import standardize_chembl
-from tpp.preprocessing.pubchem import standardize_pubchem
+from tpp.preprocessing.chembl.standardize_chembl import standardize_chembl
+from tpp.preprocessing.pubchem.standardize_pubchem import standardize_pubchem
 from tpp.preprocessing.schemas import (
     assay_id_schema,
     compound_id_schema,
     merged_data_schema,
 )
-from tpp.preprocessing.zinc15 import standardize_zinc15
+from tpp.preprocessing.zinc15.standardize_zinc15 import standardize_zinc15
 from tpp.utils.argcheck import (
     check_arguments_chembl,
     check_arguments_pubchem,
@@ -65,7 +65,7 @@ if __name__ == "__main__":
         "--zinc15-data",
         type=Path,
         metavar="PATH",
-        dest="pubchem_compounds_path",
+        dest="zinc15_data_path",
         help="Path to folder with ZINC15 (combined) compounds/assays data",
     )
 
