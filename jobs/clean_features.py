@@ -3,20 +3,18 @@ import logging
 from pathlib import Path
 
 from pyspark.sql import SparkSession
+from pyspark.sql.dataframe import DataFrame
 from pyspark.sql import functions as F
 
 from tpp.descriptors.cleaner import clean_frequency_feature
 from tpp.utils.argcheck import check_input_path, check_output_path, check_path
 
 
-def clean_feature(df, feature_name: str, output_path: Path):
+def clean_feature(df: DataFrame, feature_name: str, output_dir_path: Path):
     clean_features, feature_ids = clean_frequency_feature(df, feature_name)
 
     feature_ids.write.parquet(
-        (
-            output_path
-            / "merged_data_mixed_features_{}_ids.parquet".format(feature_name)
-        ).as_posix()
+        (output_dir_path / "{}_ids.parquet".format(feature_name)).as_posix()
     )
 
     df = (
@@ -49,11 +47,11 @@ if __name__ == "__main__":
         help=f"Path to folder with input `parquet` file",
     )
     parser.add_argument(
-        "--output",
+        "--output-dir",
         required=True,
         type=Path,
         metavar="PATH",
-        dest="output_path",
+        dest="output_dir_path",
         help=(
             "Path where output and computed features should be written to "
             "in `parquet` format"
@@ -68,13 +66,14 @@ if __name__ == "__main__":
         default="/local00/bioinf/spark/tmp",
         help=("Path where temporary files are stored " "in `parquet` format"),
     )
+    parser.add_argument(
+        "--feature", required=True, type=str, action="append", dest="feature_list"
+    )
     args = parser.parse_args()
 
     check_input_path(args.input_path)
-    check_output_path(args.output_path)
+    check_output_path(args.output_dir_path)
     check_path(args.temp_files_path)
-
-    feature_list = ["ECFC4", "DFS8", "ECFC6", "CATS2D", "SHED"]
 
     try:
         spark = (
@@ -87,8 +86,12 @@ if __name__ == "__main__":
 
         data_mixed = spark.read.parquet(args.input_path.as_posix())
 
-        for idx, feature_name in enumerate(feature_list):
-            data_mixed = clean_feature(data_mixed, feature_name, args.output_path)
+        for feature_name in args.feature_list:
+            if feature_name not in data_mixed.columns:
+                raise ValueError(f"Feature {feature_name} does not exist!")
+
+        for idx, feature_name in enumerate(args.feature_list):
+            data_mixed = clean_feature(data_mixed, feature_name, args.output_dir_path)
             data_mixed.write.parquet(
                 (
                     args.temp_files_path / "clean_features_chkpt{}.parquet".format(idx)
@@ -100,7 +103,9 @@ if __name__ == "__main__":
                 ).as_posix()
             )
 
-        data_mixed.write.parquet(args.output_path.as_posix())
+        data_mixed.write.parquet(
+            (args.output_dir_path / "data_clean.parquet").as_posix()
+        )
     except Exception as e:
         logging.exception(e)
     finally:
