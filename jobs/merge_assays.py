@@ -43,7 +43,7 @@ if __name__ == "__main__":
         type=Path,
         metavar="PATH",
         dest="chembl_assays_path",
-        help="Path to ChEMBL assays in `parquet` format"",
+        help="Path to ChEMBL assays in `parquet` format",
     )
 
     parser.add_argument("--merge-pubchem", action="store_true", default=False)
@@ -52,14 +52,14 @@ if __name__ == "__main__":
         type=Path,
         metavar="PATH",
         dest="pubchem_compounds_path",
-        help="Path to PubChem compounds in `parquet` format"",
+        help="Path to PubChem compounds in `parquet` format",
     )
     parser.add_argument(
         "--pubchem-assays",
         type=Path,
         metavar="PATH",
         dest="pubchem_assays_path",
-        help="Path to PubChem assays in `parquet` format"",
+        help="Path to PubChem assays in `parquet` format",
     )
 
     parser.add_argument("--merge-zinc15", action="store_true", default=False)
