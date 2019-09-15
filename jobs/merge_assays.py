@@ -171,7 +171,7 @@ if __name__ == "__main__":
             F.collect_set("mol_file").alias("mol_file"),
             F.map_from_entries(
                 F.sort_array(
-                    F.collect_list(F.struct(F.col("global_id"), F.col("activity")))
+                    F.collect_set(F.struct(F.col("global_id"), F.col("activity")))
                 )
             ).alias("labels"),
         )
