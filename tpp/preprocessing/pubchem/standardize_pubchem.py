@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from pyspark.sql import SparkSession
+from pyspark.sql import Window
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 
@@ -32,6 +33,14 @@ def standardize_pubchem(spark: SparkSession, compounds_path: Path, assays_path: 
     # PubChem - Merge Compounds and Assays
     data = assays.alias("a").join(
         compounds.alias("c"), F.col("a.cid") == F.col("c.mol_id")
+    )
+
+    # Filter out non agreeing activity labels due to inchikey collision
+    w = Window.partitionBy("inchikey", "assay_id")
+    data = (
+        data.withColumn("size", F.size(F.collect_set("activity").over(w)))
+        .filter(F.col("size") == 1)
+        .drop("size")
     )
 
     data = (

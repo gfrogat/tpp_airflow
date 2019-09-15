@@ -47,6 +47,14 @@ def standardize_chembl(spark: SparkSession, compounds_path: Path, assays_path: P
         compounds.alias("c"), F.col("a.mol_id") == F.col("c.mol_id")
     )
 
+    # Filter out non agreeing activity labels due to inchikey collision
+    w = Window.partitionBy("inchikey", "assay_id")
+    data = (
+        data.withColumn("size", F.size(F.collect_set("activity").over(w)))
+        .filter(F.col("size") == 1)
+        .drop("size")
+    )
+
     data = data.withColumn("dataset", F.lit("ChEMBL")).select(
         "inchikey", "assay_id", "mol_file", "activity", "dataset"
     )
