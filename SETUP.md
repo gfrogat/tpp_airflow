@@ -10,6 +10,9 @@ The certificates will be mounted in the Docker containers as [secrets](https://d
 Simply run docker-compose up. It will create the subnet and will fail because the container is missing. We will build the container later.
 
 ```bash
+bash scripts/setup_env_files.sh
+
+# Will error but we only need the network
 docker-compose up
 ```
 
@@ -67,7 +70,7 @@ openssl verify -CAfile ca-cert.pem client-cert.pem
 chmod 600 *.csr *.pem
 
 #SERVICE=postgres
-#SERVICE=rabbitmq
+SERVICE=rabbitmq
 
 sudo mkdir -p /etc/ssl/${SERVICE}
 sudo cp ca-cert.pem server-cert.pem server-key.pem /etc/ssl/${SERVICE}
@@ -206,10 +209,6 @@ To      Action      From
 
 Environment settings for the containers running Airflow are stored in `.docker.env`. Docker-compose additionaly needs additional environment variables which are stored in `.env`.
 You can setup the files running:
-
-```bash
-bash scripts/setup_env_files.sh
-```
 
 ```bash
 bash scripts/build-containers.sh
