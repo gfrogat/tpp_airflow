@@ -45,7 +45,7 @@ if __name__ == "__main__":
         required=True,
         type=Path,
         metavar="PATH",
-        dest="cluster_mapping",
+        dest="cluster_mapping_path",
         help=f"Path to cluster mapping in `parquet` format",
     )
     parser.add_argument(
