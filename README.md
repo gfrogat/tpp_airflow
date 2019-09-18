@@ -49,3 +49,7 @@ export LD_LIBRARY_PATH="${HADOOP_HOME}/lib/native":${LD_LIBRARY_PATH}
 ```
 
 Reload your `.bashrc` (or just open a new terminal session). You should now be able to run Pyspark by typing `pyspark` in the terminal.
+
+## Usage
+
+The package contains `bash` and `python` [scripts](./scripts) for downloading and exporting datasets in parquet format, as well as `Pyspark` [jobs](./jobs). As the sequence of commands is quite complex there is another repository [tpp_airflow](https://git.bioinf.jku.at/tpp/tpp_airflow) which defines the workflows for downloading datasets and the required steps in form of a [Airflow](https://airflow.readthedocs.io/en/stable/) DAG.
