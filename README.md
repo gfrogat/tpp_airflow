@@ -9,7 +9,7 @@ The website is currently only available internally in the ML network.
 - PostgreSQL Database for Metadata and Result
 - RabbitMQ Broker
 - Celery Executor
-- Encrypted Proby via NGINX to Airflow and Flower webservers for monitoring.
+- Encrypted Proxy via NGINX to Airflow and Flower webservers for monitoring.
 
 The databases are not dockerized and run on the host as separate services.
 
