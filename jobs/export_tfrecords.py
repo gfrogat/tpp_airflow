@@ -139,12 +139,12 @@ if __name__ == "__main__":
         metadata["num_items_train"] = records_train.count()
 
         # Randomize training data and store as TFRecords
-        records_test.write.orderBy(F.rand()).format("tfrecords").option(
+        records_test.orderBy(F.rand()).write.format("tfrecords").option(
             "recordType", "Example"
         ).save((args.output_dir_path / "test.tfrecords").as_posix())
 
         # Randomize testing data and store as TFRecords
-        records_train.write.orderBy(F.rand()).format("tfrecords").option(
+        records_train.orderBy(F.rand()).write.format("tfrecords").option(
             "recordType", "Example"
         ).save((args.output_dir_path / "train.tfrecords").as_posix())
 
