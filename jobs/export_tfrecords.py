@@ -1,4 +1,5 @@
 import argparse
+import json
 import logging
 from pathlib import Path
 
@@ -77,7 +78,7 @@ if __name__ == "__main__":
             if feature.name in args.feature_list:
                 feature_query += match_datatype(feature)
 
-        mapping = spark.read.parquet(args.cluster_mapping.as_posix())
+        mapping = spark.read.parquet(args.cluster_mapping_path.as_posix())
 
         data = data.alias("d").join(
             mapping.alias("m"), F.col("d.inchikey") == F.col("m.inchikey"), how="left"
@@ -86,8 +87,6 @@ if __name__ == "__main__":
         data = data.withColumn(
             "cluster", F.when(F.col("cluster_id") == 1.0, 1).otherwise(0)
         )
-
-        # TODO Add Metadata computation
 
         data.filter(F.col("cluster_id") == 1).select(F.explode("labels")).groupBy(
             "key"
@@ -113,17 +112,42 @@ if __name__ == "__main__":
             (args.output_dir_path / "label_mask_train.parquet").as_posix()
         )
 
-        data.filter(F.col("cluster") == 1).drop("cluster_id", "cluster").select(
-            feature_query
-        ).write.format("tfrecords").option("recordType", "Example").save(
+        metadata = {}
+
+        for feature in data.schema:
+            if feature.name in args.feature_list:
+                if isinstance(feature.dataType, T.MapType):
+                    metadata[f"{feature.name}_size"] = (
+                        data.select(F.explode(feature.name))
+                        .select("key")
+                        .distinct()
+                        .count()
+                    )
+
+        records_test = (
+            data.filter(F.col("cluster") == 1)
+            .drop("cluster_id", "cluster")
+            .select(feature_query)
+        )
+        records_train = (
+            data.filter(F.col("cluster") != 1)
+            .drop("cluster_id", "cluster")
+            .select(feature_query)
+        )
+
+        metadata["num_items_test"] = records_test.count()
+        metadata["num_items_train"] = records_train.count()
+
+        records_test.write.format("tfrecords").option("recordType", "Example").save(
             (args.output_dir_path / "test.tfrecords").as_posix()
         )
 
-        data.filter(F.col("cluster") != 1).drop("cluster_id", "cluster").select(
-            feature_query
-        ).write.format("tfrecords").option("recordType", "Example").save(
+        records_train.write.format("tfrecords").option("recordType", "Example").save(
             (args.output_dir_path / "train.tfrecords").as_posix()
         )
+
+        with open(args.output_dir_path / "metadata.json", "w") as f:
+            json.dump(metadata, f)
 
     except Exception as e:
         logging.exception(e)
