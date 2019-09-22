@@ -94,5 +94,8 @@ if __name__ == "__main__":
         processed_assays.write.parquet(args.output_path.as_posix())
     except Exception as e:
         logging.exception(e)
+        raise SystemExit(
+            "Spark Job encountered a problem. Check the logs for more information"
+        )
     finally:
         spark.stop()
