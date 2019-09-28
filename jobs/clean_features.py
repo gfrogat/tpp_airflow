@@ -64,7 +64,7 @@ if __name__ == "__main__":
         metavar="PATH",
         dest="temp_files_path",
         default="/local00/bioinf/spark/tmp",
-        help=("Path where temporary files are stored " "in `parquet` format"),
+        help=("Path where temporary files are stored in `parquet` format"),
     )
     parser.add_argument(
         "--feature", required=True, type=str, action="append", dest="feature_list"
@@ -73,7 +73,8 @@ if __name__ == "__main__":
 
     check_input_path(args.input_path)
     check_output_path(args.output_dir_path)
-    check_path(args.temp_files_path)
+    check_output_path(args.temp_files_path)
+    args.temp_files_path.mkdir()
 
     try:
         spark = (
