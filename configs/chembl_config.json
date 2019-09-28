@@ -1,5 +1,6 @@
 {
   "tpp_python_home": "/local00/bioinf/tpp/code/tpp_python",
+  "conda_prefix": "/system/user/ruch/miniconda3/envs/airflow-worker",
   "tpp_scala_jar": "/publicdata/tpp/code/tpp_scala-assembly-0.1.jar",
   "tf_spark_connector_jar": "/publicdata/tpp/code/spark-tensorflow-connector_2.11-1.14.0.jar",
   "cluster_mapping_path": "/publicdata/tpp/lsc_cluster_mappings.parquet",
