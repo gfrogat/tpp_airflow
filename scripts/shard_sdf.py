@@ -65,7 +65,7 @@ def shard_sdf(sdf_path: Path, shards_path: Path, num_shards: int, num_proc: int)
                 partial(
                     export_sdf_shard,
                     sdf_path=sdf_path,
-                    shard_dir=shards_path,
+                    shards_path=shards_path,
                     width=len(str(num_shards)),
                 ),
                 shard_meta,
