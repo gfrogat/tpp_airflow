@@ -7,9 +7,9 @@
     "cluster_mapping_path": "/publicdata/tpp/lsc_cluster_mappings.parquet",
     "tpp_root": "/local00/bioinf/tpp",
     "chembl_release": 25,
-    "chembl_sqlite_path": "data/chembl_25/chembl_25_sqlite/chembl_25.db",
-    "chembl_sdf_path": "data/chembl_25/chembl_25.sdf",
-    "chembl_sdf_shards_path": "data/sdf_shards",
+    "chembl_sqlite_path": "chembl/data/chembl_25/chembl_25_sqlite/chembl_25.db",
+    "chembl_sdf_path": "chembl/data/chembl_25/chembl_25.sdf",
+    "chembl_sdf_shards_path": "chembl/data/sdf_shards",
     "num_partitions": 200
   },
   "merged_config": {}
