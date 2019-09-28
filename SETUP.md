@@ -311,3 +311,19 @@ conda create -n "airflow-worker" python=3.7 -y
 conda activate airflow-worker
 pip install -r requirements.txt
 ````
+
+## Updating Connections
+
+The connections (e.g. Spark Master URL) can be set via the WebUI or via CLI:
+
+```bash
+airflow connections --add --conn_id spark_hawk --conn_uri spark://hawk:7077 --conn_extra '{"queue": "root.default"}'
+```
+
+## Updating Variables
+
+The variables can be updated via the WebUI or via CLI:
+
+```bash
+airflow variables --import configs/dag_variables.json
+```

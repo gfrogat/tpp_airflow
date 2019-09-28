@@ -1,8 +1,10 @@
 import datetime as dt
+import uuid
+from pathlib import Path
 
 from airflow import DAG
-from airflow.models import Variable
 from airflow.contrib.operators.spark_submit_operator import SparkSubmitOperator
+from airflow.models import Variable
 from airflow.operators.bash_operator import BashOperator
 
 default_args = {
@@ -16,7 +18,14 @@ default_args = {
     "retry_delay": dt.timedelta(minutes=30),
 }
 
-dag_config = Variable.get("chembl_config.json", deserialize_json=True)
+dag_config = Variable.get("chembl_config", deserialize_json=True)
+tpp_root = Path(dag_config["tpp_root"]) / str(uuid.uuid4())
+chembl_root = tpp_root / "chembl"
+tmp_root = tpp_root / "tmp"
+
+dag_config["tpp_root"] = tpp_root
+dag_config["chembl_root"] = chembl_root
+dag_config["tmp_root"] = tmp_root
 
 with DAG(
     "pipeline_chembl",
@@ -36,23 +45,32 @@ with DAG(
 
     # Download ChEMBL data
     download_chembl_command = """
-    CHEMBL_DIR={{ params.chembl_root }}/data \
-    RELEASE={{ params.chembl_release }} \
     bash {{ params.tpp_python_home }}/scripts/download_chembl.sh
     """
     download_chembl = BashOperator(
-        task_id="download_chembl", bash_command=download_chembl_command
+        task_id="download_chembl",
+        bash_command=download_chembl_command,
+        env={
+            "CHEMBL_DIR": "{{ params.chembl_root }}/data",
+            "RELEASE": "{{ params.chembl_release }}",
+        },
     )
 
     # Extract downloaded ChEMBL data
     extract_chembl_command = """
-    pushd {{ params.chembl_root }}/data/chembl_{{ params.chembl_release }} && \
+    pushd ${CHEMBL_RELEASE_DIR} && \
     gunzip chembl_*.sdf.gz && \
     tar --strip-components=1 -zxf chembl_*_sqlite.tar.gz && \
     popd
     """
     extract_chembl = BashOperator(
-        task_id="extract_chembl", bash_command=extract_chembl_command
+        task_id="extract_chembl",
+        bash_command=extract_chembl_command,
+        env={
+            "CHEMBL_RELEASE_DIR": (
+                "{{ params.chembl_root }}/data/" "chembl_{{ params.chembl_release }}"
+            )
+        },
     )
 
     # Export SQLite Assays
@@ -98,6 +116,7 @@ with DAG(
         task_id="sdf_to_parquet",
         application=sdf_to_parquet_app,
         application_args=sdf_to_parquet_app_args,
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "output_path": "compounds.parquet",
             "dataset": "ChEMBL",
@@ -119,6 +138,7 @@ with DAG(
         task_id="process_assays",
         application=process_assays_app,
         application_args=process_assays_app_args,
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "assays.parquet",
             "output_path": "assays_processed.parquet",
@@ -141,6 +161,7 @@ with DAG(
         task_id="merge_assays",
         application=merge_assays_app,
         application_args=merge_assays_app_args,
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "chembl_compounds_path": "compounds.parquet",
             "chembl_assays_path": "assays_processed.parquet",
@@ -163,6 +184,7 @@ with DAG(
         task_id="compute_semisparse_features_scala",
         application=compute_semisparse_features_scala_app,
         application_args=compute_semisparse_features_scala_args,
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "merged_data.parquet",
             "output_path": "features_semisparse_partial.parquet",
@@ -188,6 +210,7 @@ with DAG(
         task_id="compute_semisparse_features_python",
         application=compute_semisparse_features_python_app,
         application_args=compute_semisparse_features_python_args,
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "features_semisparse_partial.parquet",
             "output_path": "features_semisparse.parquet",
@@ -205,7 +228,7 @@ with DAG(
         "--output-dir",
         "{{ params.tpp_root }}/{{ params.output_dir_path }}",
         "--temp-files",
-        "{{ params.tmp_dir }}",
+        "{{ params.tmp_root }}",
         "--feature",
         "CATS2D",
         "--feature",
@@ -215,6 +238,7 @@ with DAG(
         task_id="clean_semisparse_features",
         application=clean_semisparse_features_app,
         application_args=clean_semisparse_features_args,
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "features_semisparse.parquet",
             "output_dir_path": "features_semisparse_clean",
@@ -237,6 +261,7 @@ with DAG(
         task_id="compute_sparse_features_scala",
         application=compute_sparse_features_scala_app,
         application_args=compute_sparse_features_scala_args,
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "merged_data.parquet",
             "output_path": "features_sparse.parquet",
@@ -252,7 +277,7 @@ with DAG(
         "--output-dir",
         "{{ params.tpp_root }}/{{ params.output_dir_path }}",
         "--temp-files",
-        "{{ params.tmp_dir }}",
+        "{{ params.tmp_root }}",
         "--feature",
         "DFS8",
         "--feature",
@@ -264,6 +289,7 @@ with DAG(
         task_id="clean_sparse_features",
         application=clean_sparse_features_app,
         application_args=clean_sparse_features_args,
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "features_sparse.parquet",
             "output_dir_path": "features_sparse_clean",
@@ -272,7 +298,7 @@ with DAG(
 
     # Compute Tox Features - Python
     compute_tox_features_python_app = (
-        "{{ params.tpp_python_home }}/jobs/compute_features.py"
+        "{{ params.tpp_python_home }}/jobs/compute_descriptors.py"
     )
     compute_tox_features_python_args = [
         "--input",
@@ -288,6 +314,7 @@ with DAG(
         task_id="compute_tox_features_python",
         application=compute_tox_features_python_app,
         application_args=compute_tox_features_python_args,
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "merged_data.parquet",
             "output_path": "features_tox_morgan_partial.parquet",
@@ -297,7 +324,7 @@ with DAG(
 
     # Compute Morgan Fingerprints - Python
     compute_morgan_features_python_app = (
-        "{{ params.tpp_python_home }}/jobs/compute_features.py"
+        "{{ params.tpp_python_home }}/jobs/compute_descriptors.py"
     )
     compute_morgan_features_python_args = [
         "--input",
@@ -313,6 +340,7 @@ with DAG(
         task_id="compute_morgan_features_python",
         application=compute_morgan_features_python_app,
         application_args=compute_morgan_features_python_args,
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "features_tox_morgan_partial.parquet",
             "output_path": "features_tox_morgan.parquet",
@@ -346,6 +374,7 @@ with DAG(
         application=export_tfrecords_semisparse_app,
         jars="{{ params.tf_spark_connector }}",
         application_args=export_tfrecords_semisparse_app_args,
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "features_semisparse_clean/data_clean.parquet",
             "output_dir_path": "records_semisparse",
@@ -377,6 +406,7 @@ with DAG(
         task_id="export_tfrecords_sparse",
         application=export_tfrecords_sparse_app,
         application_args=export_tfrecords_sparse_app_args,
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "features_sparse_clean/data_clean.parquet",
             "output_dir_path": "records_sparse",
@@ -402,6 +432,7 @@ with DAG(
         task_id="export_tfrecords_tox_morgan",
         application=export_tfrecords_tox_morgan_app,
         application_args=export_tfrecords_tox_morgan_app_args,
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "features_tox_morgan_clean/data_clean.parquet",
             "output_dir_path": "records_tox_morgan",
