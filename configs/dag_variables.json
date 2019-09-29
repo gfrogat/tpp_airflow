@@ -8,6 +8,7 @@
     "tpp_scala_jar": "/publicdata/tpp/code/tpp_scala-assembly-0.1.jar",
     "tf_spark_connector_jar": "/publicdata/tpp/code/spark-tensorflow-connector_2.11-1.14.0.jar",
     "tpp_root": "/local00/bioinf/tpp",
+    "results_root": "/publicdata/tpp/runs",
     "chembl_sqlite_path": "chembl/data/chembl_25/chembl_25_sqlite/chembl_25.db",
     "chembl_sdf_path": "chembl/data/chembl_25/chembl_25.sdf",
     "chembl_sdf_shards_path": "chembl/data/sdf_shards",

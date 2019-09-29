@@ -8,12 +8,12 @@ from airflow.operators.bash_operator import BashOperator
 default_args = {
     "owner": "tpp",
     "depends_on_past": False,
-    "start_date": dt.datetime(2019, 8, 1),
-    "email": ["tpp@ml.jku.at"],
-    "email_on_failure": False,
-    "email_on_retry": False,
+    "start_date": dt.datetime(2019, 9, 29),
+    "email": ["gfrogat@gmail.com"],
+    "email_on_failure": True,
+    "email_on_retry": True,
     "retries": 1,
-    "retry_delay": dt.timedelta(minutes=30),
+    "retry_delay": dt.timedelta(minutes=5),
 }
 
 dag_config = Variable.get("chembl_config", deserialize_json=True)
@@ -441,6 +441,14 @@ with DAG(
         },
     )
 
+    # Store results
+    store_results_command = """
+    cp -r {{ params.tpp_root }}/{{ run_id }} {{ params.results_root }}
+    """
+    store_results = BashOperator(
+        task_id="store_results", bash_command=store_results_command
+    )
+
 # Preprocessing + Protocol
 create_folder_structure >> download_chembl >> extract_chembl
 extract_chembl >> export_sqlite_assays >> process_assays
@@ -460,6 +468,12 @@ merge_assays >> compute_tox_features_python >> compute_morgan_features_python
 clean_semisparse_features >> export_tfrecords_semisparse
 clean_sparse_features >> export_tfrecords_sparse
 compute_morgan_features_python >> export_tfrecords_tox_morgan
+
+[
+    export_tfrecords_semisparse,
+    export_tfrecords_sparse,
+    export_tfrecords_tox_morgan,
+] >> store_results
 
 
 if __name__ == "__main__":
