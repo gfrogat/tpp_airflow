@@ -97,7 +97,7 @@ with DAG(
         "--input",
         "{{ params.tpp_root }}/{{ run_id }}/{{ params.chembl_sdf_shards_path }}",
         "--output",
-        "{{ params.tpp_root }}/{{ run_id }}/{{ params.output }}",
+        "{{ params.tpp_root }}/{{ run_id }}/{{ params.output_path }}",
         "--dataset",
         "{{ params.dataset }}",
         "--num-partitions",
@@ -105,6 +105,7 @@ with DAG(
     ]
     sdf_to_parquet = SparkSubmitOperator(
         task_id="sdf_to_parquet",
+        conn_id=dag_config["spark_master"],
         application=sdf_to_parquet_app,
         application_args=sdf_to_parquet_app_args,
         conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
@@ -127,6 +128,7 @@ with DAG(
     ]
     process_assays = SparkSubmitOperator(
         task_id="process_assays",
+        conn_id=dag_config["spark_master"],
         application=process_assays_app,
         application_args=process_assays_app_args,
         conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
@@ -150,6 +152,7 @@ with DAG(
     ]
     merge_assays = SparkSubmitOperator(
         task_id="merge_assays",
+        conn_id=dag_config["spark_master"],
         application=merge_assays_app,
         application_args=merge_assays_app_args,
         conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
@@ -173,6 +176,7 @@ with DAG(
     ]
     compute_semisparse_features_scala = SparkSubmitOperator(
         task_id="compute_semisparse_features_scala",
+        conn_id=dag_config["spark_master"],
         application=compute_semisparse_features_scala_app,
         application_args=compute_semisparse_features_scala_args,
         conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
@@ -185,13 +189,13 @@ with DAG(
 
     # Compute Semisparse Features - Python
     compute_semisparse_features_python_app = (
-        "{{ params.tpp_python_home }}/jobs/compute_features.py"
+        "{{ params.tpp_python_home }}/jobs/compute_descriptors.py"
     )
     compute_semisparse_features_python_args = [
         "--input",
         "{{ params.tpp_root }}/{{ run_id }}/{{ params.input_path }}",
         "--output",
-        "{{ params.tpp_root }}/{{ run_id }}/{{ params.ouput_path }}",
+        "{{ params.tpp_root }}/{{ run_id }}/{{ params.output_path }}",
         "--feature-type",
         "{{ params.feature_type }}",
         "--num-partitions",
@@ -199,6 +203,7 @@ with DAG(
     ]
     compute_semisparse_features_python = SparkSubmitOperator(
         task_id="compute_semisparse_features_python",
+        conn_id=dag_config["spark_master"],
         application=compute_semisparse_features_python_app,
         application_args=compute_semisparse_features_python_args,
         conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
@@ -219,7 +224,7 @@ with DAG(
         "--output-dir",
         "{{ params.tpp_root }}/{{ run_id }}/{{ params.output_dir_path }}",
         "--temp-files",
-        "{{ params.tpp_root }}/{{ run_id }}/tmp",
+        "{{ params.tpp_root }}/{{ run_id }}/tmp/{{ task.task_id }}",
         "--feature",
         "CATS2D",
         "--feature",
@@ -227,6 +232,7 @@ with DAG(
     ]
     clean_semisparse_features = SparkSubmitOperator(
         task_id="clean_semisparse_features",
+        conn_id=dag_config["spark_master"],
         application=clean_semisparse_features_app,
         application_args=clean_semisparse_features_args,
         conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
@@ -242,7 +248,7 @@ with DAG(
         "-i",
         "{{ params.tpp_root }}/{{ run_id }}/{{ params.input_path }}",
         "-o",
-        "{{ params.tpp_root }}/{{ run_id }}/{{ params.ouput_path }}",
+        "{{ params.tpp_root }}/{{ run_id }}/{{ params.output_path }}",
         "--features",
         "{{ params.feature_type }}",
         "--npartitions",
@@ -250,6 +256,7 @@ with DAG(
     ]
     compute_sparse_features_scala = SparkSubmitOperator(
         task_id="compute_sparse_features_scala",
+        conn_id=dag_config["spark_master"],
         application=compute_sparse_features_scala_app,
         application_args=compute_sparse_features_scala_args,
         conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
@@ -268,7 +275,7 @@ with DAG(
         "--output-dir",
         "{{ params.tpp_root }}/{{ run_id }}/{{ params.output_dir_path }}",
         "--temp-files",
-        "{{ params.tpp_root }}/{{ run_id }}/tmp",
+        "{{ params.tpp_root }}/{{ run_id }}/tmp/{{ task.task_id }}",
         "--feature",
         "DFS8",
         "--feature",
@@ -278,6 +285,7 @@ with DAG(
     ]
     clean_sparse_features = SparkSubmitOperator(
         task_id="clean_sparse_features",
+        conn_id=dag_config["spark_master"],
         application=clean_sparse_features_app,
         application_args=clean_sparse_features_args,
         conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
@@ -295,7 +303,7 @@ with DAG(
         "--input",
         "{{ params.tpp_root }}/{{ run_id }}/{{ params.input_path }}",
         "--output",
-        "{{ params.tpp_root }}/{{ run_id }}/{{ params.ouput_path }}",
+        "{{ params.tpp_root }}/{{ run_id }}/{{ params.output_path }}",
         "--feature-type",
         "{{ params.feature_type }}",
         "--num-partitions",
@@ -303,6 +311,7 @@ with DAG(
     ]
     compute_tox_features_python = SparkSubmitOperator(
         task_id="compute_tox_features_python",
+        conn_id=dag_config["spark_master"],
         application=compute_tox_features_python_app,
         application_args=compute_tox_features_python_args,
         conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
@@ -321,7 +330,7 @@ with DAG(
         "--input",
         "{{ params.tpp_root }}/{{ run_id }}/{{ params.input_path }}",
         "--output",
-        "{{ params.tpp_root }}/{{ run_id }}/{{ params.ouput_path }}",
+        "{{ params.tpp_root }}/{{ run_id }}/{{ params.output_path }}",
         "--feature-type",
         "{{ params.feature_type }}",
         "--num-partitions",
@@ -329,6 +338,7 @@ with DAG(
     ]
     compute_morgan_features_python = SparkSubmitOperator(
         task_id="compute_morgan_features_python",
+        conn_id=dag_config["spark_master"],
         application=compute_morgan_features_python_app,
         application_args=compute_morgan_features_python_args,
         conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
@@ -362,8 +372,9 @@ with DAG(
     ]
     export_tfrecords_semisparse = SparkSubmitOperator(
         task_id="export_tfrecords_semisparse",
+        conn_id=dag_config["spark_master"],
         application=export_tfrecords_semisparse_app,
-        jars="{{ params.tf_spark_connector }}",
+        jars="{{ params.tf_spark_connector_jar }}",
         application_args=export_tfrecords_semisparse_app_args,
         conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
@@ -383,20 +394,18 @@ with DAG(
         "--cluster-mapping",
         "{{ params.cluster_mapping_path }}",
         "--feature",
-        "CATS2D_clean",
+        "ECFC4_clean",
         "--feature",
-        "SHED_clean",
+        "ECFC6_clean",
         "--feature",
-        "PubChem",
-        "--feature",
-        "maccs_fp",
-        "--feature",
-        "rdkit_fp",
+        "DFS8_clean",
     ]
     export_tfrecords_sparse = SparkSubmitOperator(
         task_id="export_tfrecords_sparse",
+        conn_id=dag_config["spark_master"],
         application=export_tfrecords_sparse_app,
         application_args=export_tfrecords_sparse_app_args,
+        jars="{{ params.tf_spark_connector_jar }}",
         conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "features_sparse_clean/data_clean.parquet",
@@ -421,11 +430,13 @@ with DAG(
     ]
     export_tfrecords_tox_morgan = SparkSubmitOperator(
         task_id="export_tfrecords_tox_morgan",
+        conn_id=dag_config["spark_master"],
         application=export_tfrecords_tox_morgan_app,
         application_args=export_tfrecords_tox_morgan_app_args,
+        jars="{{ params.tf_spark_connector_jar }}",
         conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
-            "input_path": "features_tox_morgan_clean/data_clean.parquet",
+            "input_path": "features_tox_morgan.parquet",
             "output_dir_path": "records_tox_morgan",
         },
     )

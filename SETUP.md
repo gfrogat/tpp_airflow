@@ -317,7 +317,7 @@ pip install -r requirements.txt
 The connections (e.g. Spark Master URL) can be set via the WebUI or via CLI:
 
 ```bash
-airflow connections --add --conn_id spark_hawk --conn_uri spark://hawk:7077 --conn_extra '{"queue": "root.default"}'
+airflow connections --add --conn_id spark_hawk --conn_ spark://hawk:7077 --conn_extra '{"queue": "root.default"}'
 ```
 
 ## Updating Variables
