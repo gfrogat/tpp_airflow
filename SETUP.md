@@ -317,7 +317,7 @@ pip install -r requirements.txt
 The connections (e.g. Spark Master URL) can be set via the WebUI or via CLI:
 
 ```bash
-airflow connections --add --conn_id spark_hawk --conn_ spark://hawk:7077 --conn_extra '{"queue": "root.default"}'
+airflow connections --add --conn_id spark_hawk --conn_type spark --conn_host spark://hawk:7077 --conn_extra '{"queue": "root.default"}'
 ```
 
 ## Updating Variables
@@ -326,4 +326,12 @@ The variables can be updated via the WebUI or via CLI:
 
 ```bash
 airflow variables --import configs/dag_variables.json
+```
+
+## Linking DAGS
+
+To make the dags visible to airflow symlink the `dags` folder into your `AIRFLOW_HOME` directory.
+
+```bash
+ln -s $(pwd)/dags ~/airflow/dags
 ```
