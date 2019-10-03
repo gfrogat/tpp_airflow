@@ -129,3 +129,4 @@ dmypy.json
 secrets
 .docker.env
 .conda.env
+worker-secrets
