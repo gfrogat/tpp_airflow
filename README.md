@@ -13,4 +13,4 @@ The website is currently only available internally in the ML network.
 
 The databases are not dockerized and run on the host as separate services.
 
-To setup everything follow the instructions in [](INSTALL.md) and [](SETUP.md).
+To setup everything follow the instructions in [INSTALL.md](./INSTALL.md) and [SETUP.md](./SETUP.md).
