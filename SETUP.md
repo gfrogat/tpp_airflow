@@ -39,7 +39,7 @@ SUBJECT_DETAIL="\
 /emailAddress=tpp@ml.jku.at"
 
 openssl req -new -nodes -text -out ca.csr -keyout ca-key.pem -subj "${SUBJECT_COMMON}${SUBJECT_DETAIL}"
-openssl x509 -req -in ca.csr -text -extfile /etc/pki/tls/openssl.cnf -extensions v3_ca -signkey ca-key.pem -out ca-cert.pem
+openssl x509 -req -in ca.csr -text -days 365 -extfile /etc/pki/tls/openssl.cnf -extensions v3_ca -signkey ca-key.pem -out ca-cert.pem
 
 chmod 600 *.csr *.pem
 ```
@@ -54,7 +54,7 @@ SUBJECT_DETAIL="\
 /emailAddress=tpp@ml.jku.at"
 
 openssl req -new -nodes -text -out server.csr -keyout server-key.pem -subj "${SUBJECT_COMMON}${SUBJECT_DETAIL}"
-openssl x509 -req -in server.csr -text -CA ca-cert.pem -CAkey ca-key.pem -CAcreateserial -out server-cert.pem
+openssl x509 -req -in server.csr -text -days 365 -CA ca-cert.pem -CAkey ca-key.pem -CAcreateserial -out server-cert.pem
 
 openssl verify -CAfile ca-cert.pem server-cert.pem
 
@@ -63,7 +63,7 @@ SUBJECT_DETAIL="\
 /emailAddress=tpp@ml.jku.at"
 
 openssl req -new -nodes -text -out client.csr -keyout client-key.pem -subj "${SUBJECT_COMMON}${SUBJECT_DETAIL}"
-openssl x509 -req -in client.csr -text -CA ca-cert.pem -CAkey ca-key.pem -CAcreateserial -out client-cert.pem
+openssl x509 -req -in client.csr -text -days 365 -CA ca-cert.pem -CAkey ca-key.pem -CAcreateserial -out client-cert.pem
 
 openssl verify -CAfile ca-cert.pem client-cert.pem
 
@@ -93,7 +93,7 @@ SUBJECT_DETAIL="\
 
 mkdir -p ${SERVICE} && pushd ${SERVICE}
 openssl req -new -nodes -text -out server.csr -keyout server-key.pem -subj "${SUBJECT_COMMON}${SUBJECT_DETAIL}"
-openssl x509 -req -in server.csr -text -CA ../ca-cert.pem -CAkey ../ca-key.pem -CAcreateserial -out server-cert.pem
+openssl x509 -req -in server.csr -text -days 365 -CA ../ca-cert.pem -CAkey ../ca-key.pem -CAcreateserial -out server-cert.pem
 
 openssl dhparam -out dhparam.pem 4096
 
@@ -143,7 +143,7 @@ hostssl    all             airflow         140.78.90.0/16          md5  clientce
 ### Restart PostgreSQL service
 
 ```bash
-systemctl restart postgresql
+sudo systemctl restart postgresql
 ```
 
 ## RabbitMQ
@@ -186,8 +186,8 @@ management.ssl.keyfile    = /etc/ssl/rabbitmq/server-key.pem
 
 ```bash
 # Make sure Docker subnet already exists (docker-compose up)
-systemctl stop rabbitmq-server
-systemctl start rabbitmq-server
+sudo systemctl stop rabbitmq-server
+sudo systemctl start rabbitmq-server
 ```
 
 ## Firewall Setup
@@ -214,7 +214,7 @@ You can setup the files running:
 bash scripts/build-containers.sh
 ```
 
-If you encounter permission errors chown the keys to 1000:1000 so that they are accessible in the container.
+If you encounter permission errors `chown` the keys to 1000:1000 so that they are accessible in the container.
 
 ## Initialize the database
 
