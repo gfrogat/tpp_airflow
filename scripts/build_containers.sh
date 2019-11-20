@@ -7,6 +7,6 @@ docker build \
 
 docker build \
     --build-arg TPP_CREDENTIALS=./worker-secrets \
-    -f tools/docker/worker.Dockerfile \
+    -f tools/docker/airflow-worker.Dockerfile \
     -t ml-jku/airflow-worker \
     .
