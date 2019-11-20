@@ -273,6 +273,12 @@ Clone the repository on the worker and setup the `.env` files.
 bash scripts/setup_env_files.sh
 ```
 
+```bash
+conda create -n "airflow-worker" python=3.7 -y
+conda activate airflow-worker
+pip install -r requirements.txt
+```
+
 Open the newly generated file `.conda.env` and update the SQLAlchemy connection string for `POSTGRES_SSL_CONFIG` to use your local SSL certificates (see section above for instructions).
 
 The standard solution is to create a folder `.tpp-credentials` in your home directory and copy the certificates there. You can then use this script to create the connection string. **Important:** you have to double-quote the string so that you can successfully load the environment (due to annoying different parsing behaviour of docker-compose and bash).
@@ -299,18 +305,12 @@ as well as the `RABBITMQ_SSL_CLIENT_CACERT_*` variables. You can simply copy pas
 
 You can source the environment by typing:
 
-````bash
+```bash
 set -o allexport
 source .conda.env
 printenv
 set +o allexport
 ```
-
-```bash
-conda create -n "airflow-worker" python=3.7 -y
-conda activate airflow-worker
-pip install -r requirements.txt
-````
 
 ## Updating Connections
 
