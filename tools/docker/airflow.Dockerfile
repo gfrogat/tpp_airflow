@@ -14,6 +14,7 @@ RUN apt-get update -y && apt-get install -y \
     git \
     locales \
     rsync \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen

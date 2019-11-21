@@ -4,9 +4,10 @@ LABEL maintainer="Peter Ruch"
 ARG SECRETS_DIR=/run/secrets
 ARG TPP_CREDENTIALS="./tpp-credentials"
 
-RUN pip install --upgrade pip pyspark[sql]
-
 USER root
+
+COPY third_party/tpp_python /opt/tpp_python
+RUN pip install /opt/tpp_python
 
 COPY ${TPP_CREDENTIALS}/ca-cert.pem ${SECRETS_DIR}/ca-cert
 COPY ${TPP_CREDENTIALS}/client-key.pem ${SECRETS_DIR}/postgres-client-key

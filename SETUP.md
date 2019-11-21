@@ -317,7 +317,7 @@ set +o allexport
 The connections (e.g. Spark Master URL) can be set via the WebUI or via CLI:
 
 ```bash
-airflow connections --add --conn_id spark_hawk --conn_type spark --conn_host spark://hawk:7077 --conn_extra '{"queue": "root.default"}'
+airflow connections --add --conn_id spark_raptor --conn_type spark --conn_host spark://raptor:7077 --conn_extra '{"queue": "root.default"}'
 ```
 
 ## Updating Variables
@@ -325,7 +325,7 @@ airflow connections --add --conn_id spark_hawk --conn_type spark --conn_host spa
 The variables can be updated via the WebUI or via CLI:
 
 ```bash
-airflow variables --import configs/dag_variables.json
+airflow variables --import /configs/dag_variables.json
 ```
 
 ## Linking DAGS
