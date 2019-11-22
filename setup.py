@@ -24,7 +24,7 @@ with open(version_path, "w") as f:
     f.write(f'git_version = "{sha}"')
 
 
-requirements = {"install": ["setuptools", "pyspark[sql]==2.4.3"]}
+requirements = {"install": ["setuptools", "tqdm", "pyspark[sql]==2.4.3"]}
 install_requires = requirements["install"]
 
 setup(
