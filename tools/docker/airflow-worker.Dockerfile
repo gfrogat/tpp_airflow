@@ -16,8 +16,10 @@ ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
 
 RUN wget https://archive.apache.org/dist/spark/spark-2.4.3/spark-2.4.3-bin-hadoop2.7.tgz && \
     tar xzf spark-2.4.3-bin-hadoop2.7.tgz -C /opt && \
+    rm spark-2.4.3-bin-hadoop2.7.tgz && \
     wget http://mirror.klaus-uwe.me/apache/hadoop/common/hadoop-2.7.7/hadoop-2.7.7.tar.gz && \
-    tar xzf hadoop-2.7.7.tar.gz -C /opt
+    tar xzf hadoop-2.7.7.tar.gz -C /opt && \
+    rm hadoop-2.7.7.tar.gz
 
 ENV SPARK_HOME /opt/spark-2.4.3-bin-hadoop2.7
 ENV HADOOP_HOME /opt/hadoop-2.7.7
@@ -42,6 +44,6 @@ RUN chown -R airflow:airflow ${SECRETS_DIR}
 COPY tools/docker/scripts/start_spark.sh /start_spark.sh
 RUN chmod +x /start_spark.sh
 
-EXPOSE 7077 4040 8080
+EXPOSE 7077 4040 8080 8793
 
 USER airflow
