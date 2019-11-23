@@ -108,7 +108,7 @@ with DAG(
         conn_id=dag_config["spark_master"],
         application=sdf_to_parquet_app,
         application_args=sdf_to_parquet_app_args,
-        conf={"spark.pyspark.python": "{{ params.pyspark_python }}"},
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "output_path": "chembl/compounds.parquet",
             "dataset": "ChEMBL",
@@ -131,7 +131,7 @@ with DAG(
         conn_id=dag_config["spark_master"],
         application=process_assays_app,
         application_args=process_assays_app_args,
-        conf={"spark.pyspark.python": "{{ params.pyspark_python }}"},
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "chembl/assays.parquet",
             "output_path": "chembl/assays_processed.parquet",
@@ -155,7 +155,7 @@ with DAG(
         conn_id=dag_config["spark_master"],
         application=merge_assays_app,
         application_args=merge_assays_app_args,
-        conf={"spark.pyspark.python": "{{ params.pyspark_python }}"},
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "chembl_compounds_path": "chembl/compounds.parquet",
             "chembl_assays_path": "chembl/assays_processed.parquet",
@@ -179,7 +179,7 @@ with DAG(
         conn_id=dag_config["spark_master"],
         application=compute_semisparse_features_scala_app,
         application_args=compute_semisparse_features_scala_args,
-        conf={"spark.pyspark.python": "{{ params.pyspark_python }}"},
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "merged_data.parquet",
             "output_path": "features_semisparse_partial.parquet",
@@ -206,7 +206,7 @@ with DAG(
         conn_id=dag_config["spark_master"],
         application=compute_semisparse_features_python_app,
         application_args=compute_semisparse_features_python_args,
-        conf={"spark.pyspark.python": "{{ params.pyspark_python }}"},
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "features_semisparse_partial.parquet",
             "output_path": "features_semisparse.parquet",
@@ -235,7 +235,7 @@ with DAG(
         conn_id=dag_config["spark_master"],
         application=clean_semisparse_features_app,
         application_args=clean_semisparse_features_args,
-        conf={"spark.pyspark.python": "{{ params.pyspark_python }}"},
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "features_semisparse.parquet",
             "output_dir_path": "features_semisparse_clean",
@@ -259,7 +259,7 @@ with DAG(
         conn_id=dag_config["spark_master"],
         application=compute_sparse_features_scala_app,
         application_args=compute_sparse_features_scala_args,
-        conf={"spark.pyspark.python": "{{ params.pyspark_python }}"},
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "merged_data.parquet",
             "output_path": "features_sparse.parquet",
@@ -288,7 +288,7 @@ with DAG(
         conn_id=dag_config["spark_master"],
         application=clean_sparse_features_app,
         application_args=clean_sparse_features_args,
-        conf={"spark.pyspark.python": "{{ params.pyspark_python }}"},
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "features_sparse.parquet",
             "output_dir_path": "features_sparse_clean",
@@ -314,7 +314,7 @@ with DAG(
         conn_id=dag_config["spark_master"],
         application=compute_tox_features_python_app,
         application_args=compute_tox_features_python_args,
-        conf={"spark.pyspark.python": "{{ params.pyspark_python }}"},
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "merged_data.parquet",
             "output_path": "features_tox_morgan_partial.parquet",
@@ -341,7 +341,7 @@ with DAG(
         conn_id=dag_config["spark_master"],
         application=compute_morgan_features_python_app,
         application_args=compute_morgan_features_python_args,
-        conf={"spark.pyspark.python": "{{ params.pyspark_python }}"},
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "features_tox_morgan_partial.parquet",
             "output_path": "features_tox_morgan.parquet",
@@ -376,7 +376,7 @@ with DAG(
         application=export_tfrecords_semisparse_app,
         jars="{{ params.tf_spark_connector_jar }}",
         application_args=export_tfrecords_semisparse_app_args,
-        conf={"spark.pyspark.python": "{{ params.pyspark_python }}"},
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "features_semisparse_clean/data_clean.parquet",
             "output_dir_path": "records_semisparse",
@@ -406,7 +406,7 @@ with DAG(
         application=export_tfrecords_sparse_app,
         application_args=export_tfrecords_sparse_app_args,
         jars="{{ params.tf_spark_connector_jar }}",
-        conf={"spark.pyspark.python": "{{ params.pyspark_python }}"},
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "features_sparse_clean/data_clean.parquet",
             "output_dir_path": "records_sparse",
@@ -434,7 +434,7 @@ with DAG(
         application=export_tfrecords_tox_morgan_app,
         application_args=export_tfrecords_tox_morgan_app_args,
         jars="{{ params.tf_spark_connector_jar }}",
-        conf={"spark.pyspark.python": "{{ params.pyspark_python }}"},
+        conf={"spark.pyspark.python": "{{ params.conda_prefix }}/bin/python"},
         params={
             "input_path": "features_tox_morgan.parquet",
             "output_dir_path": "records_tox_morgan",
