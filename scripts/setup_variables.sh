@@ -5,6 +5,7 @@ DB_HOST_DOCKER_IP="172.18.0.1"
 AIRFLOW_ENV=".docker.env"
 AIRFLOW_NETWORK="tpp"
 SECRETS_DIR="/run/secrets"
+TPP_HOME="/publicdata/tpp"
 
 docker run --rm \
     --env-file "${AIRFLOW_ENV}" \
@@ -27,6 +28,6 @@ docker run --rm \
     -v "$(pwd)"/secrets/client-cert.pem:"${SECRETS_DIR}"/postgres-client-cert \
     -v "$(pwd)"/secrets/client-key.pem:"${SECRETS_DIR}"/rabbitmq-client-key \
     -v "$(pwd)"/secrets/client-cert.pem:"${SECRETS_DIR}"/rabbitmq-client-cert \
-    -v "$(pwd)"/configs:/configs \
+    -v ${TPP_HOME}/configs:${AIRFLOW_HOME}/configs \
     -ti ml-jku/airflow \
-    airflow variables --import /configs/dag_variables.json
+    airflow variables --import ${AIRFLOW_HOME}/configs/dag_variables.json
