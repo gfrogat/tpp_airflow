@@ -3,7 +3,7 @@
 AIRFLOW_HOME=/home/airflow/airflow
 
 SECRETS_DIR=/run/secrets
-TPP_CREDENTIALS="./secrets"
+TPP_CREDENTIALS="./worker-secrets"
 
 docker build \
     --build-arg AIRFLOW_HOME=${AIRFLOW_HOME} \
