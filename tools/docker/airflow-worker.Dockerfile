@@ -33,6 +33,10 @@ COPY ./third_party/tpp_python /opt/tpp_python
 RUN /opt/conda/bin/pip install --no-cache-dir -r /requirements.txt && \
     /opt/conda/bin/pip install --no-cache-dir /opt/tpp_python
 
+# Arrow 0.15 introduces new format which breaks parquet processing in Spark
+# https://stackoverflow.com/questions/58269115/how-to-enable-apache-arrow-in-pyspark
+ENV ARROW_PRE_0_15_IPC_FORMAT 1
+
 COPY ${TPP_CREDENTIALS}/ca-cert.pem ${SECRETS_DIR}/ca-cert
 COPY ${TPP_CREDENTIALS}/client-key.pem ${SECRETS_DIR}/postgres-client-key
 COPY ${TPP_CREDENTIALS}/client-cert.pem ${SECRETS_DIR}/postgres-client-cert
