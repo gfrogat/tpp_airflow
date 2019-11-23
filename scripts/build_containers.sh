@@ -4,7 +4,6 @@ AIRFLOW_HOME=/home/airflow/airflow
 
 SECRETS_DIR=/run/secrets
 TPP_CREDENTIALS="./secrets"
-PYSPARK_PYTHON="/system/user/ruch/miniconda3/envs/airflow-worker"
 
 docker build \
     --build-arg AIRFLOW_HOME=${AIRFLOW_HOME} \
@@ -20,9 +19,10 @@ docker build \
 docker build \
     --build-arg SECRETS_DIR=${SECRETS_DIR} \
     --build-arg TPP_CREDENTIALS=${TPP_CREDENTIALS} \
-    --build-arg PYSPARK_PYTHON=${PYSPARK_PYTHON} \
     -f tools/docker/airflow-worker.Dockerfile \
     -t ml-jku/airflow-worker \
     .
 
+
+docker save ml-jku/airflow:latest | gzip > /publicdata/tpp/docker/airflow_latest.tar.gz
 docker save ml-jku/airflow-worker:latest | gzip > /publicdata/tpp/docker/airflow-worker_latest.tar.gz

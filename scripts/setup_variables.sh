@@ -17,7 +17,7 @@ docker run --rm \
     -v "$(pwd)"/secrets/client-key.pem:"${SECRETS_DIR}"/rabbitmq-client-key \
     -v "$(pwd)"/secrets/client-cert.pem:"${SECRETS_DIR}"/rabbitmq-client-cert \
     -ti ml-jku/airflow \
-    airflow connections --add --conn_id spark_raptor --conn_type spark --conn_host spark://raptor:7077 --conn_extra '{"queue": "root.default"}'
+    airflow connections --add --conn_id spark_raptor --conn_type spark --conn_host spark://airflow-spark:7077 --conn_extra '{"queue": "root.default"}'
 
 docker run --rm \
     --env-file "${AIRFLOW_ENV}" \
