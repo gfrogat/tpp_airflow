@@ -12,18 +12,6 @@ RUN apt-get update -y && apt-get install -y \
     xorg \
     && rm -rf /var/lib/apt/lists/*
 
-#RUN curl -o ~/miniconda.sh -O  https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
-     #chmod +x ~/miniconda.sh && \
-     #~/miniconda.sh -b -p /opt/conda && \
-     #rm ~/miniconda.sh && \
-     #/opt/conda/bin/conda install -y python=3.7 openjdk && \
-     #/opt/conda/bin/conda install -c mordred-descriptor -c rdkit mordred && \
-     #/opt/conda/bin/conda clean -ya && \
-     #/opt/conda/bin/pip install --no-cache-dir -r /requirements.txt
-
-#COPY third_party/tpp_python /opt/tpp_python
-#RUN /opt/conda/bin/pip install --no-cache-dir /opt/tpp_python
-
 ENV PATH ${PYSPARK_PYTHON}/bin:${PATH}
 
 COPY ${TPP_CREDENTIALS}/ca-cert.pem ${SECRETS_DIR}/ca-cert

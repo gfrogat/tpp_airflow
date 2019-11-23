@@ -28,6 +28,6 @@ docker run --rm \
     -v "$(pwd)"/secrets/client-cert.pem:"${SECRETS_DIR}"/postgres-client-cert \
     -v "$(pwd)"/secrets/client-key.pem:"${SECRETS_DIR}"/rabbitmq-client-key \
     -v "$(pwd)"/secrets/client-cert.pem:"${SECRETS_DIR}"/rabbitmq-client-cert \
-    -v ${TPP_HOME}/configs:${AIRFLOW_HOME}/configs \
+    -v ${TPP_HOME}/code/tpp_airflow/configs:${AIRFLOW_HOME}/configs \
     -ti ml-jku/airflow \
     airflow variables --import ${AIRFLOW_HOME}/configs/dag_variables.json
