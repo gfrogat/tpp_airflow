@@ -35,7 +35,7 @@ RUN /opt/conda/bin/pip install --no-cache-dir -r /requirements.txt && \
 
 # Arrow 0.15 introduces new format which breaks parquet processing in Spark
 # https://stackoverflow.com/questions/58269115/how-to-enable-apache-arrow-in-pyspark
-ENV ARROW_PRE_0_15_IPC_FORMAT 1
+RUN /opt/conda/bin/pip install --no-cache-dir "pyarrow<0.15"
 
 COPY ${TPP_CREDENTIALS}/ca-cert.pem ${SECRETS_DIR}/ca-cert
 COPY ${TPP_CREDENTIALS}/client-key.pem ${SECRETS_DIR}/postgres-client-key
