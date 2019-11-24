@@ -282,7 +282,14 @@ Ideally update connections and variables via `scripts/setup_variables.sh`.
 The workers will run in a Docker container. Pull the docker container from the NFS `/publicdata/tpp/docker`:
 
 ```bash
+docker load < /publicdata/tpp/docker/airflow_latest.tar.gz
 docker load < /publicdata/tpp/docker/airflow-worker_latest.tar.gz
+```
+
+Create the environment files that are used by the docker container.
+
+```bash
+bash scripts/setup_env_files.sh
 ```
 
 You can then launch the container via the script `scripts/start_worker.sh`. In the container you can then start Spark and start the Airflow worker.
@@ -297,3 +304,7 @@ bash scripts/start_worker.sh
 # start Airflow Worker
 airflow worker
 ```
+
+## Defining new dags
+The dags are stored under `/publicdata/tpp/tags` and are automatically mapped into the container.
+As the dags rely one a specific version of `tpp_python` one possibly needs to update the docker images via `scripts/build_images.sh` on the `demosite.ml.jku.at` server.
