@@ -5,7 +5,8 @@ services:
     container_name: airflow-web
     image: ml-jku/airflow
     volumes:
-      - ./dags:${AIRFLOW_HOME}/dags
+      - ${TPP_HOME}/code/tpp_airflow/dags:${AIRFLOW_HOME}/dags
+      - ${TPP_HOME}/logs:${AIRFLOW_HOME}/logs
     ports:
       - 8080:8080
     env_file:
@@ -49,7 +50,8 @@ services:
     depends_on:
       - airflow-web
     volumes:
-      - ./dags:${AIRFLOW_HOME}/dags
+      - ${TPP_HOME}/code/tpp_airflow/dags:${AIRFLOW_HOME}/dags
+      - ${TPP_HOME}/logs:${AIRFLOW_HOME}/logs
     env_file:
       - ${AIRFLOW_ENV}
     networks:

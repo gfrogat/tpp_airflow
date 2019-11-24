@@ -261,77 +261,50 @@ params = {
 urllib.parse.urlencode(params)
 ```
 
+### Updating Airflow Connections and Variables
+
+The connections (e.g. Spark Master URL) can be set via the WebUI or via CLI:
+
+```bash
+airflow connections --add --conn_id spark_raptor --conn_type spark --conn_host spark://airflow-spark:7077 --conn_extra '{"queue": "root.default"}'
+```
+
+The variables can be updated via the WebUI or via CLI:
+
+```bash
+airflow variables --import ./configs/dag_variables.json
+```
+
+Ideally update connections and variables via `scripts/setup_variables.sh`.
+
 ## Running the workers
 
-Note: **This section is temporary and will be updated in the future**
+The workers will run in a Docker container. Pull the docker container from the NFS `/publicdata/tpp/docker`:
 
-The workers will run directly on the machine in a separate conda environment.
+```bash
+docker load < /publicdata/tpp/docker/airflow_latest.tar.gz
+docker load < /publicdata/tpp/docker/airflow-worker_latest.tar.gz
+```
 
-Clone the repository on the worker and setup the `.env` files.
+Create the environment files that are used by the docker container.
 
 ```bash
 bash scripts/setup_env_files.sh
 ```
 
-```bash
-conda create -n "airflow-worker" python=3.7 -y
-conda activate airflow-worker
-pip install -r requirements.txt
-```
-
-Open the newly generated file `.conda.env` and update the SQLAlchemy connection string for `POSTGRES_SSL_CONFIG` to use your local SSL certificates (see section above for instructions).
-
-The standard solution is to create a folder `.tpp-credentials` in your home directory and copy the certificates there. You can then use this script to create the connection string. **Important:** you have to double-quote the string so that you can successfully load the environment (due to annoying different parsing behaviour of docker-compose and bash).
-
-```python
-# requires > python 3.6
-import urllib.parse
-from pathlib import Path
-
-secrets_folder = Path("~/.tpp-credentials").expanduser()
-
-params = {
-    "sslmode": "verify-ca",
-    "sslrootcert": (secrets_folder / "ca-cert.pem").as_posix(),
-    "sslkey": (secrets_folder / "client-key.pem").as_posix(),
-    "sslcert": (secrets_folder / "client-cert.pem").as_posix(),
-}
-print(params)
-
-print(urllib.parse.urlencode(params))
-```
-
-as well as the `RABBITMQ_SSL_CLIENT_CACERT_*` variables. You can simply copy paste the expanded paths in the params dictionary from the snippet above.
-
-You can source the environment by typing:
+You can then launch the container via the script `scripts/start_worker.sh`. In the container you can then start Spark and start the Airflow worker.
 
 ```bash
-set -o allexport
-source .conda.env
-printenv
-set +o allexport
+# launch container
+bash scripts/start_worker.sh
+
+# start Spark
+/start_spark.sh
+
+# start Airflow Worker
+airflow worker
 ```
 
-## Updating Connections
-
-The connections (e.g. Spark Master URL) can be set via the WebUI or via CLI:
-
-```bash
-airflow connections --add --conn_id spark_raptor --conn_type spark --conn_host spark://raptor:7077 --conn_extra '{"queue": "root.default"}'
-```
-
-## Updating Variables
-
-The variables can be updated via the WebUI or via CLI:
-
-```bash
-airflow variables --import /configs/dag_variables.json
-```
-
-## Linking DAGS
-
-To make the dags visible to airflow symlink the `dags` folder into your `AIRFLOW_HOME` directory.
-
-```bash
-ln -s $(pwd)/dags ~/airflow/dags
-```
+## Defining new dags
+The dags are stored under `/publicdata/tpp/tags` and are automatically mapped into the container.
+As the dags rely one a specific version of `tpp_python` one possibly needs to update the docker images via `scripts/build_images.sh` on the `demosite.ml.jku.at` server.
